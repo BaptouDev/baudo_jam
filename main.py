@@ -77,8 +77,9 @@ while running:
                     current_selected_tile_index = 0
         
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
-            #utils.change_tile(rooms[current_room_index].main_layer,"res/rooms/"+room_names[current_room_index]+".csv",cursor_pos,current_selected_tile_index)
             rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
+            rooms[current_room_index].change_tile(cursor_pos,-1)
 
     if edit_mode:
         keys = pygame.key.get_pressed()
