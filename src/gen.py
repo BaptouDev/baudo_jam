@@ -33,7 +33,7 @@ class room:
         self.grass_layer.draw(screen,camera_pos)
         self.main_layer.draw(screen,camera_pos)
 
-def dir(start_point,last_dir,chamber,fail=0):
+def dir(start_point,last_dir,chamber,size,fail=0):
     if fail >=4:
         return None
     r = random.randint(0,4)
@@ -53,28 +53,38 @@ def dir(start_point,last_dir,chamber,fail=0):
         return_point = (start_point[0]-1,start_point[1])
     elif init_dir == 3:
         return_point = (start_point[0],start_point[1]-1)
-    if chamber[return_point[0]][return_point[1]] != 1:
+    if chamber[return_point[0]][return_point[1]] != -1:
         return dir(start_point,last_dir,chamber,fail+1)
-
     return return_point,init_dir
 
 def random_walk(size,steps):
-    chamber = np.ones((size,size)) 
+    chamber = np.full((size,size),-1) 
+    chamber = chamber.astype(int)
     start_point = (random.randint(2,size-3),random.randint(2,size-3))
     chamber[start_point[0]][start_point[1]] = 2
-    current_point,last_dir = dir(start_point,None,chamber)
+    current_point,last_dir = dir(start_point,None,chamber,size)
     chamber[current_point[0]][current_point[1]] = 0
     fail = 0
     last_last_dir = 0
     for i in range (steps-2):
         last_last_dir = last_dir
-        r = dir(current_point,last_dir,chamber)
+        r = dir(current_point,last_dir,chamber,size)
         if r != None:
             current_point,last_dir = r
         else:
             return random_walk(size,steps)
         chamber[current_point[0]][current_point[1]] = 0
     return chamber
-def generate_chamber(rooms:list,shop_rooms:list,size,steps):
+def generate_chamber(rooms:list,size,steps,scale):
     chamber = random_walk(size,steps)
+    pos_list = []
+    #chamber = chamber.tolist()
+    for i in range(size):
+        for j in range(size):
+            if chamber[i][j] !=-1 and chamber[i][j] != 2:
+                pos_list.append((i,j))
+    for i in pos_list:
+        chamber[i[0]][i[1]] = random.randint(3,len(rooms)-1)
+    r = random.randint(0,len(pos_list)-1)
+    chamber[pos_list[r][0]][pos_list[r][1]] = 1
     return chamber

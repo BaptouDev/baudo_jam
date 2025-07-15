@@ -1,4 +1,5 @@
 import pygame
+import pygame.freetype
 from src import utils
 from src import gen
 from src import player
@@ -9,6 +10,7 @@ running = True
 scale = 4
 cam_speed = 200
 hyper_cam_speed = 1000
+font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf",48)
 
 #terrain_sheet = pygame.image.load("res/img/terrain.png")
 #level = utils.level("res/rooms/test.csv","res/img/sheet.png",16,4)
@@ -21,7 +23,7 @@ values = [utils.weighted_value(0,1),
           utils.weighted_value(6,1),
           utils.weighted_value(7,1),
           utils.weighted_value(8,1)]
-room_names = ["test","room1","room2"]
+room_names = ["test","shop","start","room1","room2"]
 rooms = []
 for i in room_names:
     rooms.append(gen.room("res/rooms/"+i+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64),4,values,{},{}))
@@ -48,7 +50,18 @@ edit_mode = False
 current_cam_speed = 0.0
 cursor_pos = (0,0)
 current_selected_tile_index = 0
-print(gen.generate_chamber(rooms,[],15,10))
+layout = gen.generate_chamber(rooms,15,10,scale)
+print(layout)
+rooms_in_layout = []
+x=0
+for i in range(len(layout)):
+    for j in range(len(layout[0])):
+        if layout[i][j]!=-1:
+            #rooms_in_layout.append(rooms[layout[i][j]].copy())
+            rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{},{}))
+            #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
+            x+=1
+
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -96,8 +109,6 @@ while running:
         if keys[pygame.K_d]:
             camera_pos.x += current_cam_speed*delta_time
         cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
-        if not cursor_pos==None:
-            print(cursor_pos)
     else:
         player.update(delta_time,camera_pos,rooms[current_room_index].main_layer)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
@@ -111,16 +122,21 @@ while running:
 
     screen.fill("black")
 
-    rooms[current_room_index].draw(screen,camera_pos)
+    for i in rooms_in_layout:
+            i.draw(screen,camera_pos)
     if edit_mode:
+        rooms[current_room_index].draw(screen,camera_pos)
         if not cursor_pos == None:
             transparent_surface = pygame.Surface((1280, 720), pygame.SRCALPHA)
             pygame.draw.rect(transparent_surface,pygame.Color(255,255,255,50),pygame.Rect((utils.vector2(cursor_pos[0]*16*scale,cursor_pos[1]*16*scale)+rooms[current_room_index].pos - camera_pos).to_tuple(),
                                                                             (16*scale,16*scale)))
             screen.blit(transparent_surface,(0,0))
         #rooms[current_room_index].debug_draw_all_tiles(screen)
+        font.render_to(screen,(10,10),room_names[current_room_index], "white")
     else:
+        
         player.draw(screen,camera_pos,delta_time)
+        
         screen.blit(ui_sprite,(0,0))
         
     pygame.display.flip()
