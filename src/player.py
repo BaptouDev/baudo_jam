@@ -30,15 +30,19 @@ class player:
         input_vect = input_vect.normalize()
         self.vel = input_vect * self.speed
 
-        self.pos=self.pos + utils.vector2(self.vel.x,0) * dt
-        self.collision_box.left = self.pos.x - camera_pos.x + self.offset.x
-        if collision_layer.check_player_collision(self.collision_box,camera_pos):
+        self.pos = self.pos + utils.vector2(self.vel.x, 0) * dt
+        self.collision_box.left = self.pos.x + self.offset.x
+        self.collision_box.top = self.pos.y + self.offset.y
+        if collision_layer.check_player_collision(self.collision_box, camera_pos):
             self.pos.x = self.last_pos.x
+            self.collision_box.left = self.pos.x + self.offset.x
 
-        self.pos=self.pos + utils.vector2(0,self.vel.y) * dt
-        self.collision_box.top = self.pos.y - camera_pos.y + self.offset.y
-        if collision_layer.check_player_collision(self.collision_box,camera_pos):
+        self.pos = self.pos + utils.vector2(0, self.vel.y) * dt
+        self.collision_box.left = self.pos.x + self.offset.x
+        self.collision_box.top = self.pos.y + self.offset.y
+        if collision_layer.check_player_collision(self.collision_box, camera_pos):
             self.pos.y = self.last_pos.y
+            self.collision_box.top = self.pos.y + self.offset.y
 
         if self.sprite.current_anim == 'idle' and self.vel.magnitude_sq() >0:
             self.sprite.change_anim("run")
