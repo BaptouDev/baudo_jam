@@ -2,6 +2,7 @@ import pygame
 from src import utils
 from src import gen
 from src import player
+from src import enemy
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720))
@@ -49,6 +50,7 @@ current_cam_speed = 0.0
 cursor_pos = (0,0)
 current_selected_tile_index = 0
 print(gen.generate_chamber(rooms,[],15,10))
+ennemi = enemy.Enemy(utils.vector2(300, 300), scale, "res/img/mace.png", 16)
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -100,6 +102,7 @@ while running:
             print(cursor_pos)
     else:
         player.update(delta_time,camera_pos,rooms[current_room_index].main_layer)
+        ennemi.update(delta_time, rooms[current_room_index].main_layer, player.pos)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:
         #        player.pos.x = player.last_pos.x
@@ -121,6 +124,7 @@ while running:
         #rooms[current_room_index].debug_draw_all_tiles(screen)
     else:
         player.draw(screen,camera_pos,delta_time)
+        ennemi.draw(screen, camera_pos)
         screen.blit(ui_sprite,(0,0))
         
     pygame.display.flip()
