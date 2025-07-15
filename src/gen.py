@@ -53,7 +53,11 @@ def dir(start_point,last_dir,chamber,fail=0):
         return_point = (start_point[0]-1,start_point[1])
     elif init_dir == 3:
         return_point = (start_point[0],start_point[1]-1)
-    if chamber[return_point[0]][return_point[1]] != 1:
+    size = len( chamber)
+    if (0 <= return_point[0] < size) and (0 <= return_point[1] < size):
+        if chamber[return_point[0]][return_point[1]] != 1:
+            return dir(start_point,last_dir,chamber,fail+1)
+    else:
         return dir(start_point,last_dir,chamber,fail+1)
 
     return return_point,init_dir
