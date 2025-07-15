@@ -40,6 +40,7 @@ ui_sprite = pygame.transform.scale_by(ui_sprite,scale)
 #                "run": utils.animation([0,2],[.2,.2])}
 #player = utils.animated_sprite(player_anims,"res/img/player.png",utils.vector2(128,128),scale,16,"idle")
 player = player.player(utils.vector2(128,128),scale,"res/img/player.png",16,pygame.Rect(128,128,40,60),pygame.Rect(128,128,40,60))
+kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,90.0,16)
 
 previous_time = 0
 current_time = 0
@@ -123,6 +124,8 @@ while running:
         cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
     else:
         player.update(delta_time,camera_pos,collision_layers)
+        kayou.update(player.pos,delta_time)
+        kayou.face_mouse(camera_pos)
         enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:
@@ -150,6 +153,7 @@ while running:
     else:
         
         player.draw(screen,camera_pos,delta_time)
+        kayou.draw(screen,camera_pos)
         enemy.draw(screen,camera_pos)
         screen.blit(ui_sprite,(0,0))
         

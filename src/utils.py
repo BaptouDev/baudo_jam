@@ -212,3 +212,27 @@ class animated_sprite:
         surf.blit(self.images[self.anims[self.current_anim].frames[self.current_frame]],(0,0))
         surf = pygame.transform.flip(surf,self.is_flipped,False)
         screen.blit(surf,(self.pos-camera_pos).to_tuple())
+
+class rotated_sprite:
+    def __init__(self,img_path:str,pos:vector2,scale:float,rot:float,add_angle:float,dist:float,tile_size):
+        self.pos = pos
+        self.scale = scale
+        self.rot = rot
+        self.add_angle = 0
+        self.dist = dist
+        self.tile_size = tile_size
+        self.sprite = pygame.image.load(img_path).convert_alpha()
+        self.sprite = pygame.transform.scale_by(self.sprite,self.scale)
+    def update(self,new_pos:vector2,dt:float):
+        self.pos = new_pos
+        #self.rot+=dt*50
+    def face_mouse(self,camera_pos:vector2):
+        mouse_pos = vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])+camera_pos
+        self.rot = -atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/pi
+
+    def draw(self,screen:pygame.Surface,camera_pos:vector2):
+        r_x = cos(radians(-self.rot))
+        r_y = sin(radians(-self.rot))
+        real_pos = self.pos + vector2(r_x,r_y)*self.dist
+        #render_sprite = pygame.transform.rotate(self.sprite,self.rot)
+        screen.blit(self.sprite,(real_pos-camera_pos).to_tuple())
