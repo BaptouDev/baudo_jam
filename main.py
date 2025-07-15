@@ -63,6 +63,8 @@ while running:
                 rooms[current_room_index].clear_main_layer()
             if event.key == pygame.K_e:
                 edit_mode = not edit_mode
+                if not edit_mode:
+                    camera_pos = utils.vector2(0,0)
             if event.key == pygame.K_g and edit_mode:
                 if current_room_index < len(rooms)-1:
                     current_room_index +=1
