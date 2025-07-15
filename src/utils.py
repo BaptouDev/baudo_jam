@@ -28,6 +28,8 @@ class vector2:
         return vector2(self.x*scalar,self.y*scalar)
     def __sub__(self,o):
         return vector2(self.x-o.x,self.y-o.y)
+    def copy(self):
+        return vector2(self.x,self.y)
 class weighted_value:
     def __init__(self,value,weight):
         self.value = value
@@ -159,6 +161,12 @@ def rand_scatter_map(l:level,weighted_values:list,map_path,w,h):
     #        writer = csv.writer(file)
     #        writer.writerows(map)
     #l.reload_map(map_path)
+
+def check_player_collision_list(player:pygame.rect,ls:list,camera_pos):
+    for level in ls:
+        if level.check_player_collision(player,camera_pos):
+            return True
+    return False
 
 class animation:
     def __init__(self,frames:list,durations:list):

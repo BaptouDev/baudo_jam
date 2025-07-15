@@ -46,6 +46,8 @@ current_time = 0
 
 camera_pos = utils.vector2(0,0)
 
+enemy = enemy.Enemy(utils.vector2(256,256), scale,"res/img/little_guy.png",16)
+
 #Edit mode variable only for dev:
 edit_mode = False
 current_cam_speed = 0.0
@@ -54,6 +56,7 @@ current_selected_tile_index = 0
 layout = gen.generate_chamber(rooms,15,10,scale)
 print(layout)
 rooms_in_layout = []
+room_in_index = 0
 x=0
 for i in range(len(layout)):
     for j in range(len(layout[0])):
@@ -61,8 +64,15 @@ for i in range(len(layout)):
             #rooms_in_layout.append(rooms[layout[i][j]].copy())
             rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{},{}))
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
+            if layout[i][j] ==2:
+                camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
+                player.pos= rooms_in_layout[x].pos.copy()+utils.vector2(9*16*scale,5*16*scale)
+                rooms_in_index = x
             x+=1
 
+collision_layers = []
+for i in rooms_in_layout:
+    collision_layers.append(i.main_layer)
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -97,6 +107,7 @@ while running:
 
     if edit_mode:
         keys = pygame.key.get_pressed()
+        camera_pos = utils.vector2(0,0)
         if keys[pygame.K_LSHIFT]:
             current_cam_speed = hyper_cam_speed
         else:
@@ -111,8 +122,8 @@ while running:
             camera_pos.x += current_cam_speed*delta_time
         cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
     else:
-        player.update(delta_time,camera_pos,rooms[current_room_index].main_layer)
-        ennemi.update(delta_time, rooms[current_room_index].main_layer, player.pos)
+        player.update(delta_time,camera_pos,collision_layers)
+        enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:
         #        player.pos.x = player.last_pos.x
@@ -135,10 +146,11 @@ while running:
             screen.blit(transparent_surface,(0,0))
         #rooms[current_room_index].debug_draw_all_tiles(screen)
         font.render_to(screen,(10,10),room_names[current_room_index], "white")
+        screen.blit(rooms[current_room_index].main_layer.images[current_selected_tile_index],(64*19,0))
     else:
         
         player.draw(screen,camera_pos,delta_time)
-        
+        enemy.draw(screen,camera_pos)
         screen.blit(ui_sprite,(0,0))
         
     pygame.display.flip()

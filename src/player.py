@@ -17,7 +17,7 @@ class player:
         self.dashing_timer = 0
         self.dash_cooldown = 1.5
         self.dash_time = 0
-    def update(self,dt,camera_pos,collision_layer:utils.level):
+    def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
         input_vect = utils.vector2(0,0)
@@ -42,18 +42,18 @@ class player:
         if self.dashing_timer >=0:
             self.vel = self.vel.normalize() * self.dash_speed
         self.pos = self.pos + utils.vector2(self.vel.x, 0) * dt
-        self.collision_box.left = self.pos.x + self.offset.x
-        self.collision_box.top = self.pos.y + self.offset.y
-        if collision_layer.check_player_collision(self.collision_box, camera_pos):
+        self.collision_box.left = self.pos.x + self.offset.x-camera_pos.x
+        self.collision_box.top = self.pos.y + self.offset.y-camera_pos.y
+        if utils.check_player_collision_list(self.collision_box,collision_layers,camera_pos):
             self.pos.x = self.last_pos.x
-            self.collision_box.left = self.pos.x + self.offset.x
+            self.collision_box.left = self.pos.x + self.offset.x-camera_pos.x
 
         self.pos = self.pos + utils.vector2(0, self.vel.y) * dt
-        self.collision_box.left = self.pos.x + self.offset.x
-        self.collision_box.top = self.pos.y + self.offset.y
-        if collision_layer.check_player_collision(self.collision_box, camera_pos):
+        self.collision_box.left = self.pos.x + self.offset.x-camera_pos.x
+        self.collision_box.top = self.pos.y + self.offset.y-camera_pos.y
+        if utils.check_player_collision_list(self.collision_box,collision_layers,camera_pos):
             self.pos.y = self.last_pos.y
-            self.collision_box.top = self.pos.y + self.offset.y
+            self.collision_box.top = self.pos.y + self.offset.y-camera_pos.y
 
         if self.sprite.current_anim == 'idle' and self.vel.magnitude_sq() >0:
             self.sprite.change_anim("run")
