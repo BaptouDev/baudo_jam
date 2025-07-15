@@ -3,6 +3,7 @@ import pygame.freetype
 from src import utils
 from src import gen
 from src import player
+from src import enemy
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720))
@@ -111,6 +112,7 @@ while running:
         cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
     else:
         player.update(delta_time,camera_pos,rooms[current_room_index].main_layer)
+        ennemi.update(delta_time, rooms[current_room_index].main_layer, player.pos)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:
         #        player.pos.x = player.last_pos.x
