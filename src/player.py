@@ -12,8 +12,14 @@ class player:
         self.speed = 500
         self.last_pos = self.pos
         self.offset = utils.vector2(12,4)
+        self.dash_speed = 2000
+        self.dash_duration = .1
+        self.dashing_timer = 0
+        self.dash_cooldown = 1.5
+        self.dash_time = 0
     def update(self,dt,camera_pos,collision_layer:utils.level):
-        
+        self.dash_time -= dt
+        self.dashing_timer-=dt
         input_vect = utils.vector2(0,0)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
@@ -26,10 +32,15 @@ class player:
         if keys[pygame.K_d]:
             input_vect.x += 1
             self.sprite.is_flipped = False
+        
 
         input_vect = input_vect.normalize()
         self.vel = input_vect * self.speed
-
+        if keys[pygame.K_LSHIFT] and self.dash_time <=0 and input_vect.magnitude_sq() !=0:
+            self.dash_time = self.dash_cooldown
+            self.dashing_timer = self.dash_duration
+        if self.dashing_timer >=0:
+            self.vel = self.vel.normalize() * self.dash_speed
         self.pos = self.pos + utils.vector2(self.vel.x, 0) * dt
         self.collision_box.left = self.pos.x + self.offset.x
         self.collision_box.top = self.pos.y + self.offset.y
