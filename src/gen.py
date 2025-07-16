@@ -135,7 +135,7 @@ class door:
         else:
             c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
         if c_rect.colliderect(player):
-            return True,self.orientation
+            return True
     def draw_rect(self,screen,camera_pos):
         if not self.orientation%2==0:
             c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)

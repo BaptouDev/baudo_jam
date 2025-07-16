@@ -52,6 +52,17 @@ kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,64.0,16)
 previous_time = 0
 current_time = 0
 
+room_transition_time = .5
+room_transition_timer = 50
+
+re_enter_room_cooldown = 1
+re_enter_room_timer = 0
+camera_start_pos = utils.vector2(0,0)
+player_start_pos = utils.vector2(0,0)
+camera_goal_pos = utils.vector2(0,0)
+player_goal_pos = utils.vector2(0,0)
+trans = 0
+
 camera_pos = utils.vector2(0,0)
 
 enemy = enemy.Enemy(utils.vector2(256,256), scale,"res/img/little_guy.png",16)
@@ -101,6 +112,7 @@ for i in range(len(layout)):
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
+                camera_goal_pos = rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
                 player.pos= rooms_in_layout[x].pos.copy()+utils.vector2(9*16*scale,5*16*scale)
                 rooms_in_index = x
                 current_room_pos = (i,j)
@@ -117,6 +129,8 @@ while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
     previous_time = current_time
+    room_transition_timer+= delta_time
+    re_enter_room_timer-= delta_time
     if kayou.is_thrown:
         kayou_cooldown = kayou.max_throw_time - kayou.throw_timer
         if kayou_cooldown < 0:
@@ -205,6 +219,31 @@ while running:
         kayou.update(player.pos,delta_time,collision_layers,camera_pos)
         #kayou.face_mouse(camera_pos)
         enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
+        for i in doors:
+            if i.check_collision_player(player.collision_box,camera_pos) and re_enter_room_timer <=0:
+                if i.orientation ==0:
+                    camera_goal_pos = camera_pos + utils.vector2(18*scale*16,0)
+                    player_goal_pos = player.pos + utils.vector2(scale*16*3,0)
+                if i.orientation ==1:
+                    camera_goal_pos = camera_pos + utils.vector2(0,10*scale*16)
+                    player_goal_pos = player.pos + utils.vector2(0,scale*16*3)
+                if i.orientation ==2:
+                    camera_goal_pos = camera_pos - utils.vector2(18*scale*16,0)
+                    player_goal_pos = player.pos - utils.vector2(scale*16*3,0)
+                if i.orientation ==3:
+                    camera_goal_pos = camera_pos - utils.vector2(0,10*scale*16)
+                    player_goal_pos = player.pos - utils.vector2(0,scale*16*3)
+                re_enter_room_timer = re_enter_room_cooldown
+                room_transition_timer = 0
+                player_start_pos = player.pos.copy()
+                camera_start_pos = camera_pos.copy()
+        if room_transition_timer <=room_transition_time:
+            t = min(room_transition_timer / room_transition_time, 1)
+            camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)
+            player.pos = utils.lerp(player_start_pos,player_goal_pos,t)
+        else:
+            camera_pos = camera_goal_pos
+
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:
         #        player.pos.x = player.last_pos.x
@@ -246,8 +285,7 @@ while running:
         enemy.draw(screen,camera_pos)
         for i in doors:
             i.draw(screen,camera_pos)
-            i.draw_rect(screen,camera_pos)
-            i.check_collision_player(player.collision_box,camera_pos)
+            #i.draw_rect(screen,camera_pos)
         screen.blit(ui_sprite,(0,0))
           # --- UI de recharge du kayou ---
         bar_x = 250

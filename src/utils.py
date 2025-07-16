@@ -28,11 +28,14 @@ class vector2:
         return vector2(self.x*scalar,self.y*scalar)
     def __sub__(self,o):
         return vector2(self.x-o.x,self.y-o.y)
+    
     def copy(self):
         return vector2(self.x,self.y)
     
 def vec2from_tuple(tup:tuple):
     return vector2(tuple[0],tuple[1])
+def lerp(a,b,t):
+    return(a + (b-a)*t)
 class weighted_value:
     def __init__(self,value,weight):
         self.value = value
