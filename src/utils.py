@@ -137,7 +137,8 @@ def change_tile(l:level,map_path,pos:tuple,tile_index):
             writer = csv.writer(file)
             writer.writerows(l.map)
     l.reload_map(map_path)
-
+def change_tile_temp(l:level,pos:tuple,tile_index):
+    l.map[pos[1]][pos[0]] = tile_index
 def init_zero_map(l:level,map_path,w,h):
     map = np.full((w,h),-1)
     map = map.astype(int)

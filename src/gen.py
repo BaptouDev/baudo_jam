@@ -18,6 +18,8 @@ class room:
         utils.rand_scatter_map(self.grass_layer,grass_values,"",h,w)
         self.enemies = enemies
         self.objects = objects
+    def change_tile_temp(self,pos:tuple,tile_index):
+        utils.change_tile_temp(self.main_layer,pos,tile_index)
     def change_tile(self,pos:tuple,tile_index):
         utils.change_tile(self.main_layer,self.map_path,pos,tile_index)
     def clear_main_layer(self):

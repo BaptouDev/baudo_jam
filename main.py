@@ -55,7 +55,6 @@ current_cam_speed = 0.0
 cursor_pos = (0,0)
 current_selected_tile_index = 0
 layout = gen.generate_chamber(rooms,15,10,scale)
-print(layout)
 rooms_in_layout = []
 room_in_index = 0
 x=0
@@ -64,6 +63,24 @@ for i in range(len(layout)):
         if layout[i][j]!=-1:
             #rooms_in_layout.append(rooms[layout[i][j]].copy())
             rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{},{}))
+            if (0<i):
+                if layout[i-1][j] !=-1:
+                    rooms_in_layout[x].change_tile_temp((8,0),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,0),"-1")
+            if i<len(layout[0])-1:
+                if layout[i+1][j] !=-1:
+                    rooms_in_layout[x].change_tile_temp((8,9),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,9),"-1")
+            if (0<j):
+                if layout[i][j-1] !=-1:
+                    rooms_in_layout[x].change_tile_temp((0,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((0,5),"-1")
+                    
+            if j<len(layout[1])-1:
+                if layout[i][j+1] !=-1:
+                    
+                    rooms_in_layout[x].change_tile_temp((17,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((17,5),"-1")
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
@@ -100,6 +117,11 @@ while running:
                     current_selected_tile_index+=1
                 else:
                     current_selected_tile_index = 0
+            if event.key == pygame.K_KP_MINUS:
+                if current_selected_tile_index > 0:
+                    current_selected_tile_index-=1
+                else:
+                    current_selected_tile_index = len(rooms[current_room_index].main_layer.images)-1
         
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
             rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
