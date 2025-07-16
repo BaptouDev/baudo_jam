@@ -103,18 +103,30 @@ class door:
             self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
             self.door_sprite.blit(self.images[6],(0,0))
             self.door_sprite.blit(self.images[7],(0,tile_size*scale))
-            self.pos = utils.vec2from_tuple(pos_in_layout)
+            self.pos = utils.vector2(0,0)
+            self.pos.x = (pos_in_layout[1]*18+18)*tile_size*scale
+            self.pos.y = (pos_in_layout[0]*10+5)*tile_size*scale
         elif self.orientation==1:
-            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPH)
+            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPHA)
             self.door_sprite.blit(self.images[1],(0,0))
             self.door_sprite.blit(self.images[3],(tile_size*scale,0))
+            self.pos = utils.vector2(0,0)
+            self.pos.x = (pos_in_layout[1]*18+1+8)*tile_size*scale
+            self.pos.y = (pos_in_layout[0]*10+1+9)*tile_size*scale
         elif self.orientation==2:
             self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
             self.door_sprite.blit(self.images[4],(0,0))
             self.door_sprite.blit(self.images[5],(0,tile_size*scale))
+            self.pos = utils.vector2(0,0)
+            self.pos.x = (pos_in_layout[1]*18+1)*tile_size*scale
+            self.pos.y = (pos_in_layout[0]*10+5)*tile_size*scale
         elif self.orientation==3:
-            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPH)
-            self.door_sprite.blit(self.images[1],(0,0))
-            self.door_sprite.blit(self.images[3],(tile_size*scale,0))
-    def draw(self,screen,camera_pos,pos):
-        pass
+            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPHA)
+            self.door_sprite.blit(self.images[0],(0,0))
+            self.door_sprite.blit(self.images[2],(tile_size*scale,0))
+            self.pos = utils.vector2(0,0)
+            self.pos.x = (pos_in_layout[1]*18+1+8)*tile_size*scale
+            self.pos.y = (pos_in_layout[0]*10+1)*tile_size*scale
+
+    def draw(self,screen,camera_pos):
+        screen.blit(self.door_sprite,(self.pos-camera_pos).to_tuple())

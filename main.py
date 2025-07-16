@@ -66,6 +66,7 @@ room_in_index = 0
 x=0
 current_room_pos = (0,0)
 edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
+doors = []
 for i in range(len(layout)):
     for j in range(len(layout[0])):
         if layout[i][j]!=-1:
@@ -73,22 +74,25 @@ for i in range(len(layout)):
             rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{}))
             if (0<i):
                 if layout[i-1][j] !=-1:
-                    rooms_in_layout[x].change_tile_temp((8,0),"-1")
-                    rooms_in_layout[x].change_tile_temp((9,0),"-1")
+                    #rooms_in_layout[x].change_tile_temp((8,0),"-1")
+                    #rooms_in_layout[x].change_tile_temp((9,0),"-1")
+                    doors.append(gen.door("res/img/door.png",3,16,scale,(i,j)))
             if i<len(layout[0])-1:
                 if layout[i+1][j] !=-1:
-                    rooms_in_layout[x].change_tile_temp((8,9),"-1")
-                    rooms_in_layout[x].change_tile_temp((9,9),"-1")
+                    #rooms_in_layout[x].change_tile_temp((8,9),"-1")
+                    #rooms_in_layout[x].change_tile_temp((9,9),"-1")
+                    doors.append(gen.door("res/img/door.png",1,16,scale,(i,j)))
             if (0<j):
                 if layout[i][j-1] !=-1:
-                    rooms_in_layout[x].change_tile_temp((0,4),"-1")
-                    rooms_in_layout[x].change_tile_temp((0,5),"-1")
+                    #rooms_in_layout[x].change_tile_temp((0,4),"-1")
+                    #rooms_in_layout[x].change_tile_temp((0,5),"-1")
+                    doors.append(gen.door("res/img/door.png",2,16,scale,(i,j)))
                     
             if j<len(layout[1])-1:
                 if layout[i][j+1] !=-1:
-                    
-                    rooms_in_layout[x].change_tile_temp((17,4),"-1")
-                    rooms_in_layout[x].change_tile_temp((17,5),"-1")
+                    #rooms_in_layout[x].change_tile_temp((17,4),"-1")
+                    #rooms_in_layout[x].change_tile_temp((17,5),"-1")
+                    doors.append(gen.door("res/img/door.png",0,16,scale,(i,j)))
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
@@ -127,6 +131,7 @@ while running:
                 else:
                     entity_maps[current_room_index].init_zero_map(18,10)
             if event.key == pygame.K_e:
+                #camera_pos = utils.vector2(0,0)
                 edit_mode = not edit_mode
                 if not edit_mode:
                     camera_pos = utils.vector2(0,0)
@@ -177,7 +182,6 @@ while running:
 
     if edit_mode:
         keys = pygame.key.get_pressed()
-        camera_pos = utils.vector2(0,0)
         if keys[pygame.K_LSHIFT]:
             current_cam_speed = hyper_cam_speed
         else:
@@ -228,11 +232,15 @@ while running:
                 for j in range(entity_maps[current_room_index].w):
                     if entity_maps[current_room_index].map[j][i]!="-1":
                         entities[int(entity_maps[current_room_index].map[j][i])].draw_display(screen,(64+i*16*scale,64+j*16*scale))
+        for i in doors:
+            i.draw(screen,camera_pos)
     else:
         
         player.draw(screen,camera_pos,delta_time)
         kayou.draw(screen,camera_pos)
         enemy.draw(screen,camera_pos)
+        for i in doors:
+            i.draw(screen,camera_pos)
         screen.blit(ui_sprite,(0,0))
           # --- UI de recharge du kayou ---
         bar_x = 250
