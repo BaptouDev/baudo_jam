@@ -19,6 +19,8 @@ class static_sprite_entity(entity):
         self.sprite = pygame.transform.scale_by(pygame.image.load(self.sprite_path).convert_alpha(),self.scale)
     def update(self):
         super().update()
+    def draw(self,screen:pygame.Surface,camera_pos:utils.vector2):
+        screen.blit(self.sprite,(self.pos-camera_pos).to_tuple())
     def draw_display(self, screen:pygame.Surface, pos:tuple):
         screen.blit(self.sprite,pos)
     

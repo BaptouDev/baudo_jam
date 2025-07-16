@@ -93,7 +93,7 @@ def generate_chamber(rooms:list,size,steps,scale):
     return chamber
 
 class door:
-    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,pos_in_layout:tuple,is_open=False):
+    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,pos_in_layout:tuple,is_open=True):
         self.is_open=is_open
         self.orientation = orientation
         self.scale = scale

@@ -125,6 +125,8 @@ for i in rooms_in_layout:
 kayou_cooldown = kayou.max_throw_time 
 kayou_cooldown_max = kayou.max_throw_time
 
+current_entities = []
+
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -150,7 +152,7 @@ while running:
                 else:
                     entity_maps[current_room_index].init_zero_map(18,10)
             if event.key == pygame.K_e:
-                #camera_pos = utils.vector2(0,0)
+                camera_pos = utils.vector2(0,0)
                 edit_mode = not edit_mode
                 if not edit_mode:
                     camera_pos = utils.vector2(0,0)
@@ -224,19 +226,31 @@ while running:
                 if i.orientation ==0:
                     camera_goal_pos = camera_pos + utils.vector2(18*scale*16,0)
                     player_goal_pos = player.pos + utils.vector2(scale*16*3,0)
-                if i.orientation ==1:
+                    current_room_pos = (current_room_pos[0]+1,current_room_pos[1])
+                elif i.orientation ==1:
                     camera_goal_pos = camera_pos + utils.vector2(0,10*scale*16)
                     player_goal_pos = player.pos + utils.vector2(0,scale*16*3)
-                if i.orientation ==2:
+                    current_room_pos = (current_room_pos[0],current_room_pos[1]+1)
+                elif i.orientation ==2:
                     camera_goal_pos = camera_pos - utils.vector2(18*scale*16,0)
                     player_goal_pos = player.pos - utils.vector2(scale*16*3,0)
-                if i.orientation ==3:
+                    current_room_pos = (current_room_pos[0]-1,current_room_pos[1])
+                elif i.orientation ==3:
                     camera_goal_pos = camera_pos - utils.vector2(0,10*scale*16)
                     player_goal_pos = player.pos - utils.vector2(0,scale*16*3)
+                    current_room_pos = (current_room_pos[0],current_room_pos[1]-1)
                 re_enter_room_timer = re_enter_room_cooldown
                 room_transition_timer = 0
                 player_start_pos = player.pos.copy()
                 camera_start_pos = camera_pos.copy()
+                c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
+                print(layout)
+                for i in range(18):
+                    for j in range(10):
+                        if c[j][i]=="0":
+                            current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*18*16*scale+i*16*scale,current_room_pos[1]*10*16*scale+j*16*scale),scale,"","res/img/little_guy.png"))
+                            print(current_room_pos)
+                
         if room_transition_timer <=room_transition_time:
             t = min(room_transition_timer / room_transition_time, 1)
             camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)
@@ -282,6 +296,8 @@ while running:
         
         player.draw(screen,camera_pos,delta_time)
         kayou.draw(screen,camera_pos)
+        for i in current_entities:
+            i.draw(screen,camera_pos)
         enemy.draw(screen,camera_pos)
         for i in doors:
             i.draw(screen,camera_pos)
