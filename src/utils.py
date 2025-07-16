@@ -1,4 +1,4 @@
-from math import *
+import math
 import numpy as np
 import pygame
 import csv
@@ -11,7 +11,7 @@ class vector2:
     def magnitude_sq(self):
         return self.x**2 + self.y**2
     def length(self):
-        return sqrt(self.magnitude_sq())
+        return math.sqrt(self.magnitude_sq())
     def normalize(self):
         l = self.length()
         if l ==0:
@@ -262,41 +262,61 @@ class rotated_sprite:
         self.throw_timer = 0
         self.max_throw_time = 2
         self.hitbox = pygame.Rect(4*scale,4*scale,8*scale,8*scale)
+        self.particles = []
+        self.particle_image = pygame.transform.scale(self.sprite, (int(self.tile_size*self.scale/2), int(self.tile_size*self.scale/2)))
     def throw(self, direction:vector2, speed:float):
         self.is_thrown = True
-        self.velocity = speed #* direction.normalize()
+        self.velocity = speed 
         self.throw_timer = 0
+    def spawn_particles(self, pos, n=8):
+        import random
+        for _ in range(n):
+            angle = random.uniform(0, 2*3.14159)
+            speed = random.uniform(100, 300)
+            vel = vector2(math.cos(angle), math.sin(angle)) * speed
+            fade = fadeout_sprite(pos.copy(), self.scale/2, random.uniform(200, 300), 200, self.particle_image)
+            fade.vel = vel
+            self.particles.append(fade)
+    def update_particles(self, dt):
+        for p in self.particles:
+            if hasattr(p, 'vel'):
+                p.pos = p.pos + p.vel * dt
+                p.vel = p.vel * 0.85 # friction
+        self.particles = [p for p in self.particles if p.current_alpha > 0]
     def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2):
-        r_x = cos(radians(-self.rot))
-        r_y = sin(radians(-self.rot))
+        r_x = math.cos(math.radians(-self.rot))
+        r_y = math.sin(math.radians(-self.rot))
         self.hitbox.left = self.pos.x + r_x*self.dist + 4*self.scale-camera_pos.x
         self.hitbox.top = self.pos.y + r_y*self.dist + 4*self.scale-camera_pos.y
         if self.is_thrown:
-            #self.pos = self.pos + self.velocity * dt
             self.dist+=self.velocity*dt
             self.throw_timer += dt
             if self.throw_timer > self.max_throw_time or check_player_collision_list(self.hitbox,collision_layers,camera_pos):
+                if self.is_thrown: # Only spawn once
+                    # Spawn stone particles at collision point
+                    real_pos = self.pos + vector2(r_x,r_y)*self.dist
+                    self.spawn_particles(real_pos)
                 self.is_thrown = False
                 self.velocity = vector2(0,0)
                 self.dist = self.base_dist
                 self.pos = new_pos
-           
         else:
             self.pos = new_pos
         self.face_mouse(camera_pos)
-        #self.rot+=dt*50
+        self.update_particles(dt)
     def face_mouse(self,camera_pos:vector2):
         if not self.is_thrown:
             mouse_pos = vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])+camera_pos
-            self.rot = -atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/pi
-
+            self.rot = -math.atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/math.pi
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
         if self.is_visible:
-            r_x = cos(radians(-self.rot))
-            r_y = sin(radians(-self.rot))
+            r_x = math.cos(math.radians(-self.rot))
+            r_y = math.sin(math.radians(-self.rot))
             real_pos = self.pos + vector2(r_x,r_y)*self.dist
-        #render_sprite = pygame.transform.rotate(self.sprite,self.rot)
             screen.blit(self.sprite,(real_pos-camera_pos).to_tuple())
+        # Draw particles
+        for p in self.particles:
+            p.draw(screen, camera_pos, 1/60) # dt is not used for fadeout, so 1/60 is fine
 class fadeout_sprite:
     def __init__(self,pos:vector2,scale:float,fadeout_speed:float,base_alpha:float,fadeout_sprite:pygame.Surface):
         self.pos = pos
