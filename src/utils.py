@@ -251,6 +251,7 @@ class rotated_sprite:
         self.scale = scale
         self.rot = rot
         self.add_angle = 0
+        self.base_dist = dist
         self.dist = dist
         self.tile_size = tile_size
         self.sprite = pygame.image.load(img_path).convert_alpha()
@@ -259,24 +260,27 @@ class rotated_sprite:
         self.is_thrown = False
         self.velocity = vector2(0,0)
         self.throw_timer = 0
-        self.max_throw_time = 1.0  # secondes
+        self.max_throw_time = .5#1.0  # secondes
     def throw(self, direction:vector2, speed:float):
         self.is_thrown = True
-        self.velocity = direction.normalize() * speed
+        self.velocity = speed #* direction.normalize()
         self.throw_timer = 0
     def update(self,new_pos:vector2,dt:float):
         if self.is_thrown:
-            self.pos = self.pos + self.velocity * dt
+            #self.pos = self.pos + self.velocity * dt
+            self.dist+=self.velocity*dt
             self.throw_timer += dt
             if self.throw_timer > self.max_throw_time:
                 self.is_thrown = False
                 self.velocity = vector2(0,0)
+                self.dist = self.base_dist
         else:
             self.pos = new_pos
         #self.rot+=dt*50
     def face_mouse(self,camera_pos:vector2):
-        mouse_pos = vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])+camera_pos
-        self.rot = -atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/pi
+        if not self.is_thrown:
+            mouse_pos = vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])+camera_pos
+            self.rot = -atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/pi
 
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
         if self.is_visible:

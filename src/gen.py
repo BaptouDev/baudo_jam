@@ -91,7 +91,7 @@ def generate_chamber(rooms:list,size,steps,scale):
     return chamber
 
 class door:
-    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,is_open=False):
+    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,pos_in_layout:tuple,is_open=False):
         self.is_open=is_open
         self.orientation = orientation
         self.scale = scale
@@ -103,6 +103,7 @@ class door:
             self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
             self.door_sprite.blit(self.images[6],(0,0))
             self.door_sprite.blit(self.images[7],(0,tile_size*scale))
+            self.pos = utils.vec2from_tuple(pos_in_layout)
         elif self.orientation==1:
             self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPH)
             self.door_sprite.blit(self.images[1],(0,0))
