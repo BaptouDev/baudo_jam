@@ -89,3 +89,31 @@ def generate_chamber(rooms:list,size,steps,scale):
     r = random.randint(0,len(pos_list)-1)
     chamber[pos_list[r][0]][pos_list[r][1]] = 1
     return chamber
+
+class door:
+    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,is_open=False):
+        self.is_open=is_open
+        self.orientation = orientation
+        self.scale = scale
+        self.tile_size = tile_size
+        self.door_path = door_path
+        self.door_sheet=pygame.image.load(self.door_path)
+        self.images = utils.sheet_to_list(self.door_sheet,tile_size,scale)
+        if self.orientation==0:
+            self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
+            self.door_sprite.blit(self.images[6],(0,0))
+            self.door_sprite.blit(self.images[7],(0,tile_size*scale))
+        elif self.orientation==1:
+            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPH)
+            self.door_sprite.blit(self.images[1],(0,0))
+            self.door_sprite.blit(self.images[3],(tile_size*scale,0))
+        elif self.orientation==2:
+            self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
+            self.door_sprite.blit(self.images[4],(0,0))
+            self.door_sprite.blit(self.images[5],(0,tile_size*scale))
+        elif self.orientation==3:
+            self.door_sprite = pygame.Surface((tile_size*scale*2,tile_size*scale),pygame.SRCALPH)
+            self.door_sprite.blit(self.images[1],(0,0))
+            self.door_sprite.blit(self.images[3],(tile_size*scale,0))
+    def draw(self,screen,camera_pos,pos):
+        pass

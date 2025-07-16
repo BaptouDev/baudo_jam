@@ -64,6 +64,7 @@ layout = gen.generate_chamber(rooms,15,10,scale)
 rooms_in_layout = []
 room_in_index = 0
 x=0
+current_room_pos = (0,0)
 edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
 for i in range(len(layout)):
     for j in range(len(layout[0])):
@@ -93,6 +94,7 @@ for i in range(len(layout)):
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
                 player.pos= rooms_in_layout[x].pos.copy()+utils.vector2(9*16*scale,5*16*scale)
                 rooms_in_index = x
+                current_room_pos = (i,j)
             x+=1
 
 collision_layers = []
