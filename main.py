@@ -14,8 +14,6 @@ cam_speed = 200
 hyper_cam_speed = 1000
 font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf",48)
 
-#terrain_sheet = pygame.image.load("res/img/terrain.png")
-#level = utils.level("res/rooms/test.csv","res/img/sheet.png",16,4)
 values = [utils.weighted_value(0,1),
           utils.weighted_value(1,1),
           utils.weighted_value(2,1),
@@ -125,6 +123,16 @@ for i in rooms_in_layout:
 kayou_cooldown = kayou.max_throw_time 
 kayou_cooldown_max = kayou.max_throw_time
 
+MENU = 0
+GAME = 1
+CREDIT = 2
+state = MENU
+
+button_w, button_h = 400, 100
+button_play_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
+button_credit_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+button_quit_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
+
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -138,165 +146,229 @@ while running:
     else:
         if kayou_cooldown == 0:
             kayou_cooldown = kayou_cooldown_max
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r and edit_mode:
-                #w = int(input("Width of the map:"))
-                #h = int(input("Height of the map:"))
-                if edit_mode_adding_entities == False:
-                    rooms[current_room_index].clear_main_layer()
-                else:
-                    entity_maps[current_room_index].init_zero_map(18,10)
-            if event.key == pygame.K_e:
-                #camera_pos = utils.vector2(0,0)
-                edit_mode = not edit_mode
-                if not edit_mode:
-                    camera_pos = utils.vector2(0,0)
-            if event.key == pygame.K_g and edit_mode:
-                if current_room_index < len(rooms)-1:
-                    current_room_index +=1
-                else:
-                    current_room_index=0
-            if event.key == pygame.K_c and edit_mode:
-                edit_mode_adding_entities = not edit_mode_adding_entities
-            if event.key == pygame.K_KP_PLUS:
+        if state == MENU:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                if button_play_rect.collidepoint(mouse_pos):
+                    state = GAME
+                if button_quit_rect.collidepoint(mouse_pos):
+                    running = False
+                if button_credit_rect.collidepoint(mouse_pos):
+                    state = CREDIT
+        elif state == GAME:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and edit_mode:
+                    if edit_mode_adding_entities == False:
+                        rooms[current_room_index].clear_main_layer()
+                    else:
+                        entity_maps[current_room_index].init_zero_map(18,10)
+                if event.key == pygame.K_e:
+                    edit_mode = not edit_mode
+                    if not edit_mode:
+                        camera_pos = utils.vector2(0,0)
+                if event.key == pygame.K_g and edit_mode:
+                    if current_room_index < len(rooms)-1:
+                        current_room_index +=1
+                    else:
+                        current_room_index=0
+                if event.key == pygame.K_c and edit_mode:
+                    edit_mode_adding_entities = not edit_mode_adding_entities
+                if event.key == pygame.K_KP_PLUS:
+                    if not edit_mode_adding_entities:
+                        if current_selected_tile_index < len(rooms[current_room_index].main_layer.images)-1:
+                            current_selected_tile_index+=1
+                        else:
+                            current_selected_tile_index = 0
+                    else:
+                        if current_selected_entity_index < len(entities)-1:
+                            current_selected_entity_index+=1
+                        else:
+                            current_selected_entity_index = 0
+                if event.key == pygame.K_KP_MINUS:
+                    if not edit_mode_adding_entities:
+                        if current_selected_tile_index > 0:
+                            current_selected_tile_index-=1
+                        else:
+                            current_selected_tile_index = len(rooms[current_room_index].main_layer.images)-1
+                    else:
+                        if current_selected_entity_index > 0:
+                            current_selected_entity_index-=1
+                        else:
+                            current_selected_entity_index = len(entities)-1
+        
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
                 if not edit_mode_adding_entities:
-                    if current_selected_tile_index < len(rooms[current_room_index].main_layer.images)-1:
-                        current_selected_tile_index+=1
-                    else:
-                        current_selected_tile_index = 0
+                    rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
                 else:
-                    if current_selected_entity_index < len(entities)-1:
-                        current_selected_entity_index+=1
-                    else:
-                        current_selected_entity_index = 0
-            if event.key == pygame.K_KP_MINUS:
+                    entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
                 if not edit_mode_adding_entities:
-                    if current_selected_tile_index > 0:
-                        current_selected_tile_index-=1
-                    else:
-                        current_selected_tile_index = len(rooms[current_room_index].main_layer.images)-1
+                    rooms[current_room_index].change_tile(cursor_pos,-1)
                 else:
-                    if current_selected_entity_index > 0:
-                        current_selected_entity_index-=1
-                    else:
-                        current_selected_entity_index = len(entities)-1
+                    entity_maps[current_room_index].change_tile(cursor_pos,-1)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
+                mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
+                direction = mouse_pos - kayou.pos
+                kayou.throw(direction, 800)
+        elif state == CREDIT:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
+                if retour_rect.collidepoint(pygame.mouse.get_pos()):
+                    state = MENU
+
+    if state == MENU:
+        for y in range(720):
+            color = (
+                int(30 + (y/720)*60),
+                int(30 + (y/720)*90),
+                int(60 + (y/720)*120)
+            )
+            pygame.draw.line(screen, color, (0, y), (1280, y))
         
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
-            if not edit_mode_adding_entities:
-                rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+        mouse_pos = pygame.mouse.get_pos()
+        big_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 96)
+        title_rect = big_font.get_rect("Kayou")
+        big_font.render_to(screen, (1280//2 - title_rect.width//2, 90), "Kayou", (255,255,255))
+        
+        def draw_button(rect, text, base_color, hover_color):
+            is_hover = rect.collidepoint(mouse_pos)
+            color = hover_color if is_hover else base_color
+            shadow_rect = rect.copy()
+            shadow_rect.x += 6
+            shadow_rect.y += 6
+            pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
+            pygame.draw.rect(screen, color, rect, border_radius=32)
+            font.render_to(screen, (rect.x+rect.width//2-70, rect.y+rect.height//2-24), text, (0,0,0))
+        draw_button(button_play_rect, "JOUER", (80,180,255), (120,220,255))
+        draw_button(button_credit_rect, "CRÉDIT", (120,120,120), (180,180,180))
+        draw_button(button_quit_rect, "QUITTER", (200,60,60), (255,100,100))
+        
+        pygame.display.flip()
+        continue
+    elif state == GAME:
+        if edit_mode:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LSHIFT]:
+                current_cam_speed = hyper_cam_speed
             else:
-                entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
-            if not edit_mode_adding_entities:
-                rooms[current_room_index].change_tile(cursor_pos,-1)
+                current_cam_speed = cam_speed
+            if keys[pygame.K_z]:
+                camera_pos.y -= current_cam_speed*delta_time
+            if keys[pygame.K_s]:
+                camera_pos.y += current_cam_speed*delta_time
+            if keys[pygame.K_q]:
+                camera_pos.x -= current_cam_speed*delta_time
+            if keys[pygame.K_d]:
+                camera_pos.x += current_cam_speed*delta_time
+            cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
+        else:
+            player.update(delta_time,camera_pos,collision_layers)
+            kayou.update(player.pos,delta_time,collision_layers,camera_pos)
+            #kayou.face_mouse(camera_pos)
+            enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
+            for i in doors:
+                if i.check_collision_player(player.collision_box,camera_pos) and re_enter_room_timer <=0:
+                    if i.orientation ==0:
+                        camera_goal_pos = camera_pos + utils.vector2(18*scale*16,0)
+                        player_goal_pos = player.pos + utils.vector2(scale*16*3,0)
+                    if i.orientation ==1:
+                        camera_goal_pos = camera_pos + utils.vector2(0,10*scale*16)
+                        player_goal_pos = player.pos + utils.vector2(0,scale*16*3)
+                    if i.orientation ==2:
+                        camera_goal_pos = camera_pos - utils.vector2(18*scale*16,0)
+                        player_goal_pos = player.pos - utils.vector2(scale*16*3,0)
+                    if i.orientation ==3:
+                        camera_goal_pos = camera_pos - utils.vector2(0,10*scale*16)
+                        player_goal_pos = player.pos - utils.vector2(0,scale*16*3)
+                    re_enter_room_timer = re_enter_room_cooldown
+                    room_transition_timer = 0
+                    player_start_pos = player.pos.copy()
+                    camera_start_pos = camera_pos.copy()
+            if room_transition_timer <=room_transition_time:
+                t = min(room_transition_timer / room_transition_time, 1)
+                camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)
+                player.pos = utils.lerp(player_start_pos,player_goal_pos,t)
             else:
-                entity_maps[current_room_index].change_tile(cursor_pos,-1)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
-            mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
-            direction = mouse_pos - kayou.pos
-            kayou.throw(direction, 800)
+                camera_pos = camera_goal_pos
 
-    if edit_mode:
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LSHIFT]:
-            current_cam_speed = hyper_cam_speed
+            #if rooms[current_room_index].check_player_collisions(player,camera_pos):
+            #    if player.vel.x != 0:
+            #        player.pos.x = player.last_pos.x
+            #    if player.vel.y != 0:
+            #        player.pos.y = player.last_pos.y
+            #    print("yeayah")
+            #player.last_pos = player.pos
+            
+
+        screen.fill("black")
+
+        for i in rooms_in_layout:
+                i.draw(screen,camera_pos)
+        if edit_mode:
+            rooms[current_room_index].draw(screen,camera_pos)
+            if not cursor_pos == None:
+                transparent_surface = pygame.Surface((1280, 720), pygame.SRCALPHA)
+                pygame.draw.rect(transparent_surface,pygame.Color(255,255,255,50),pygame.Rect((utils.vector2(cursor_pos[0]*16*scale,cursor_pos[1]*16*scale)+rooms[current_room_index].pos - camera_pos).to_tuple(),
+                                                                                (16*scale,16*scale)))
+                screen.blit(transparent_surface,(0,0))
+            font.render_to(screen,(10,10),room_names[current_room_index], "white")
+            if edit_mode_adding_entities == False:
+                font.render_to(screen,(138,10),"Tile Editing", "white")
+                screen.blit(rooms[current_room_index].main_layer.images[current_selected_tile_index],(64*19,0))
+            else:
+                font.render_to(screen,(138,10),"Entity Editing", "white")
+                entities[current_selected_entity_index].draw_display(screen,(64*19,0))
+                for i in range(entity_maps[current_room_index].h):
+                    for j in range(entity_maps[current_room_index].w):
+                        if entity_maps[current_room_index].map[j][i]!="-1":
+                            entities[int(entity_maps[current_room_index].map[j][i])].draw_display(screen,(64+i*16*scale,64+j*16*scale))
+            for i in doors:
+                i.draw(screen,camera_pos)
         else:
-            current_cam_speed = cam_speed
-        if keys[pygame.K_z]:
-            camera_pos.y -= current_cam_speed*delta_time
-        if keys[pygame.K_s]:
-            camera_pos.y += current_cam_speed*delta_time
-        if keys[pygame.K_q]:
-            camera_pos.x -= current_cam_speed*delta_time
-        if keys[pygame.K_d]:
-            camera_pos.x += current_cam_speed*delta_time
-        cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
-    else:
-        player.update(delta_time,camera_pos,collision_layers)
-        kayou.update(player.pos,delta_time,collision_layers,camera_pos)
-        #kayou.face_mouse(camera_pos)
-        enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
-        for i in doors:
-            if i.check_collision_player(player.collision_box,camera_pos) and re_enter_room_timer <=0:
-                if i.orientation ==0:
-                    camera_goal_pos = camera_pos + utils.vector2(18*scale*16,0)
-                    player_goal_pos = player.pos + utils.vector2(scale*16*3,0)
-                if i.orientation ==1:
-                    camera_goal_pos = camera_pos + utils.vector2(0,10*scale*16)
-                    player_goal_pos = player.pos + utils.vector2(0,scale*16*3)
-                if i.orientation ==2:
-                    camera_goal_pos = camera_pos - utils.vector2(18*scale*16,0)
-                    player_goal_pos = player.pos - utils.vector2(scale*16*3,0)
-                if i.orientation ==3:
-                    camera_goal_pos = camera_pos - utils.vector2(0,10*scale*16)
-                    player_goal_pos = player.pos - utils.vector2(0,scale*16*3)
-                re_enter_room_timer = re_enter_room_cooldown
-                room_transition_timer = 0
-                player_start_pos = player.pos.copy()
-                camera_start_pos = camera_pos.copy()
-        if room_transition_timer <=room_transition_time:
-            t = min(room_transition_timer / room_transition_time, 1)
-            camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)
-            player.pos = utils.lerp(player_start_pos,player_goal_pos,t)
-        else:
-            camera_pos = camera_goal_pos
-
-        #if rooms[current_room_index].check_player_collisions(player,camera_pos):
-        #    if player.vel.x != 0:
-        #        player.pos.x = player.last_pos.x
-        #    if player.vel.y != 0:
-        #        player.pos.y = player.last_pos.y
-        #    print("yeayah")
-        #player.last_pos = player.pos
-        
-
-    screen.fill("black")
-
-    for i in rooms_in_layout:
-            i.draw(screen,camera_pos)
-    if edit_mode:
-        rooms[current_room_index].draw(screen,camera_pos)
-        if not cursor_pos == None:
-            transparent_surface = pygame.Surface((1280, 720), pygame.SRCALPHA)
-            pygame.draw.rect(transparent_surface,pygame.Color(255,255,255,50),pygame.Rect((utils.vector2(cursor_pos[0]*16*scale,cursor_pos[1]*16*scale)+rooms[current_room_index].pos - camera_pos).to_tuple(),
-                                                                            (16*scale,16*scale)))
-            screen.blit(transparent_surface,(0,0))
-        #rooms[current_room_index].debug_draw_all_tiles(screen)
-        font.render_to(screen,(10,10),room_names[current_room_index], "white")
-        if edit_mode_adding_entities == False:
-            font.render_to(screen,(138,10),"Tile Editing", "white")
-            screen.blit(rooms[current_room_index].main_layer.images[current_selected_tile_index],(64*19,0))
-        else:
-            font.render_to(screen,(138,10),"Entity Editing", "white")
-            entities[current_selected_entity_index].draw_display(screen,(64*19,0))
-            for i in range(entity_maps[current_room_index].h):
-                for j in range(entity_maps[current_room_index].w):
-                    if entity_maps[current_room_index].map[j][i]!="-1":
-                        entities[int(entity_maps[current_room_index].map[j][i])].draw_display(screen,(64+i*16*scale,64+j*16*scale))
-        for i in doors:
-            i.draw(screen,camera_pos)
-    else:
-        
-        player.draw(screen,camera_pos,delta_time)
-        kayou.draw(screen,camera_pos)
-        enemy.draw(screen,camera_pos)
-        for i in doors:
-            i.draw(screen,camera_pos)
-            #i.draw_rect(screen,camera_pos)
-        screen.blit(ui_sprite,(0,0))
-          # --- UI de recharge du kayou ---
-        bar_x = 250
-        bar_y = 25
-        bar_w = 120
-        bar_h = 24
-        pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
-        fill_ratio = kayou_cooldown / kayou_cooldown_max
-        pygame.draw.rect(screen, (80,180,255), (bar_x+2, bar_y+2, int((bar_w-4)*fill_ratio), bar_h-4), border_radius=6)
-        pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
-        screen.blit(little_rock_img, (bar_x+110, bar_y-34))
-        
-    pygame.display.flip()
+            
+            player.draw(screen,camera_pos,delta_time)
+            kayou.draw(screen,camera_pos)
+            enemy.draw(screen,camera_pos)
+            for i in doors:
+                i.draw(screen,camera_pos)
+            screen.blit(ui_sprite,(0,0))
+              # --- UI de recharge du kayou ---
+            bar_x = 250
+            bar_y = 25
+            bar_w = 120
+            bar_h = 24
+            pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
+            fill_ratio = kayou_cooldown / kayou_cooldown_max
+            pygame.draw.rect(screen, (80,180,255), (bar_x+2, bar_y+2, int((bar_w-4)*fill_ratio), bar_h-4), border_radius=6)
+            pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
+            screen.blit(little_rock_img, (bar_x+110, bar_y-34))
+            
+        pygame.display.flip()
+    elif state == CREDIT:
+        for y in range(720):
+            color = (
+                int(30 + (y/720)*60),
+                int(30 + (y/720)*90),
+                int(60 + (y/720)*120)
+            )
+            pygame.draw.line(screen, color, (0, y), (1280, y))
+        big_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 72)
+        title_rect = big_font.get_rect("Crédits")
+        big_font.render_to(screen, (1280//2 - title_rect.width//2, 90), "Crédits", (255,255,255))
+        small_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 36)
+        credit_lines = [
+            "par liftyrskinnycat et F3kri",
+            "Merci à tous les testeurs !",
+        ]
+        for i, line in enumerate(credit_lines):
+            rect = small_font.get_rect(line)
+            small_font.render_to(screen, (1280//2 - rect.width//2, 250 + i*60), line, (220,220,220))
+        retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
+        draw_button(retour_rect, "RETOUR", (80,180,255), (120,220,255))
+        pygame.display.flip()
+        continue
 
