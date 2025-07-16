@@ -40,6 +40,8 @@ current_room_index = 0
 
 ui_sprite = pygame.image.load("res/img/ui.png")
 ui_sprite = pygame.transform.scale_by(ui_sprite,scale)
+little_rock_img = pygame.image.load("res/img/little_rock.png")
+little_rock_img = pygame.transform.scale_by(little_rock_img,5)
 
 #player_anims = {"idle": utils.animation([0,1],[.3,.3]),
 #                "run": utils.animation([0,2],[.2,.2])}
@@ -252,7 +254,7 @@ while running:
         fill_ratio = kayou_cooldown / kayou_cooldown_max
         pygame.draw.rect(screen, (80,180,255), (bar_x+2, bar_y+2, int((bar_w-4)*fill_ratio), bar_h-4), border_radius=6)
         pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
-        font.render_to(screen, (bar_x+bar_w+10, bar_y), "Kayou", (255,255,255))
+        screen.blit(little_rock_img, (bar_x+110, bar_y-34))
         
     pygame.display.flip()
 
