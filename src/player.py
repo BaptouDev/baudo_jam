@@ -6,20 +6,28 @@ class player:
                 "run": utils.animation([0,2],[.2,.2])}
         self.sprite = utils.animated_sprite(player_anims,sheet_path,pos,scale,tile_size,"idle")
         self.pos = pos
+        self.scale = scale
         self.collision_box = collision_box
         self.hurtbox = hurtbox
         self.vel = utils.vector2(0,0)
         self.speed = 500
         self.last_pos = self.pos
         self.offset = utils.vector2(12,4)
-        self.dash_speed = 2000
-        self.dash_duration = .1
+        self.dash_speed = 1500
+        self.dash_duration = .15
         self.dashing_timer = 0
         self.dash_cooldown = 1.5
         self.dash_time = 0
+        self.fadeout_sprites = []
+        self.nb_fadeout_sprites = 3
+        self.sprite_creation_timer = 0
+        self.created_sprite_countdown = 3
+        self.created_sprite_offset = .01
+        #self.temp_fadeout_sprite = utils.fadeout_sprite(self.pos,scale,20,255,self.sprite.images[0])
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
+        self.sprite_creation_timer -= dt
         input_vect = utils.vector2(0,0)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
@@ -33,14 +41,22 @@ class player:
             input_vect.x += 1
             self.sprite.is_flipped = False
         
-
         input_vect = input_vect.normalize()
         self.vel = input_vect * self.speed
         if keys[pygame.K_LSHIFT] and self.dash_time <=0 and input_vect.magnitude_sq() !=0:
+            self.created_sprite_countdown = self.nb_fadeout_sprites
             self.dash_time = self.dash_cooldown
             self.dashing_timer = self.dash_duration
+            self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
+            self.created_sprite_countdown-=1
+            self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
         if self.dashing_timer >=0:
             self.vel = self.vel.normalize() * self.dash_speed
+            if self.sprite_creation_timer <=0 and self.created_sprite_countdown >=0:
+                self.created_sprite_countdown -= 1
+                self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
+                self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
+
         self.pos = self.pos + utils.vector2(self.vel.x, 0) * dt
         self.collision_box.left = self.pos.x + self.offset.x-camera_pos.x
         self.collision_box.top = self.pos.y + self.offset.y-camera_pos.y
@@ -59,7 +75,11 @@ class player:
             self.sprite.change_anim("run")
         if self.sprite.current_anim == "run" and self.vel.magnitude_sq() == 0:
             self.sprite.change_anim("idle")
+        #self.temp_fadeout_sprite.update_pos(self.pos + utils.vector2(64,64))
         self.last_pos = self.pos
     def draw(self,screen,camera_pos,dt):
         self.sprite.update_pos(self.pos)
+        for i in self.fadeout_sprites:
+            i.draw(screen,camera_pos,dt)
+        #self.temp_fadeout_sprite.draw(screen,camera_pos,dt)
         self.sprite.draw(screen,dt,camera_pos)

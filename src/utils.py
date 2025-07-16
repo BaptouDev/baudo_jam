@@ -237,3 +237,18 @@ class rotated_sprite:
         real_pos = self.pos + vector2(r_x,r_y)*self.dist
         #render_sprite = pygame.transform.rotate(self.sprite,self.rot)
         screen.blit(self.sprite,(real_pos-camera_pos).to_tuple())
+class fadeout_sprite:
+    def __init__(self,pos:vector2,scale:float,fadeout_speed:float,base_alpha:float,fadeout_sprite:pygame.Surface):
+        self.pos = pos
+        self.scale=scale
+        self.fadeout_speed=fadeout_speed
+        self.base_alpha = base_alpha
+        self.current_alpha = base_alpha
+        self.fadeout_sprite=fadeout_sprite.copy()
+    def update_pos(self,new_pos):
+        self.pos = new_pos
+    def draw(self,screen:pygame.Surface,camera_pos:vector2,dt):
+        self.current_alpha -= dt*self.fadeout_speed
+        self.current_alpha = int(self.current_alpha)
+        self.fadeout_sprite.set_alpha(self.current_alpha)
+        screen.blit(self.fadeout_sprite,(self.pos-camera_pos).to_tuple())
