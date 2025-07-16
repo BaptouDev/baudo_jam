@@ -243,7 +243,7 @@ class animated_sprite:
         screen.blit(surf,(self.pos-camera_pos).to_tuple())
 
 class rotated_sprite:
-    def __init__(self,img_path:str,pos:vector2,scale:float,rot:float,add_angle:float,dist:float,tile_size):
+    def __init__(self,img_path:str,pos:vector2,scale:float,rot:float,add_angle:float,dist:float,tile_size,is_visible=True):
         self.pos = pos
         self.scale = scale
         self.rot = rot
@@ -252,6 +252,7 @@ class rotated_sprite:
         self.tile_size = tile_size
         self.sprite = pygame.image.load(img_path).convert_alpha()
         self.sprite = pygame.transform.scale_by(self.sprite,self.scale)
+        self.is_visible = is_visible
     def update(self,new_pos:vector2,dt:float):
         self.pos = new_pos
         #self.rot+=dt*50
@@ -260,11 +261,12 @@ class rotated_sprite:
         self.rot = -atan2(mouse_pos.y-self.pos.y,mouse_pos.x-self.pos.x)*180/pi
 
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
-        r_x = cos(radians(-self.rot))
-        r_y = sin(radians(-self.rot))
-        real_pos = self.pos + vector2(r_x,r_y)*self.dist
+        if self.is_visible:
+            r_x = cos(radians(-self.rot))
+            r_y = sin(radians(-self.rot))
+            real_pos = self.pos + vector2(r_x,r_y)*self.dist
         #render_sprite = pygame.transform.rotate(self.sprite,self.rot)
-        screen.blit(self.sprite,(real_pos-camera_pos).to_tuple())
+            screen.blit(self.sprite,(real_pos-camera_pos).to_tuple())
 class fadeout_sprite:
     def __init__(self,pos:vector2,scale:float,fadeout_speed:float,base_alpha:float,fadeout_sprite:pygame.Surface):
         self.pos = pos
