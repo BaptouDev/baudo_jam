@@ -260,7 +260,7 @@ class rotated_sprite:
         self.is_thrown = False
         self.velocity = vector2(0,0)
         self.throw_timer = 0
-        self.max_throw_time = 230
+        self.max_throw_time = 2
     def throw(self, direction:vector2, speed:float):
         self.is_thrown = True
         self.velocity = speed #* direction.normalize()
