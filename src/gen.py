@@ -127,6 +127,12 @@ class door:
             self.pos = utils.vector2(0,0)
             self.pos.x = (pos_in_layout[1]*18+1+8)*tile_size*scale
             self.pos.y = (pos_in_layout[0]*10+1)*tile_size*scale
-
+    def check_collision_player(self,player:pygame.Rect,camera_pos:utils.vector2):
+        if self.orientation%2==0:
+            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
+        else:
+            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
+        if c_rect.colliderect(player):
+            print("yeah")
     def draw(self,screen,camera_pos):
         screen.blit(self.door_sprite,(self.pos-camera_pos).to_tuple())

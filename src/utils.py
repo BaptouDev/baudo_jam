@@ -279,6 +279,7 @@ class rotated_sprite:
                 self.is_thrown = False
                 self.velocity = vector2(0,0)
                 self.dist = self.base_dist
+                self.pos = new_pos
            
         else:
             self.pos = new_pos

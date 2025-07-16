@@ -45,7 +45,7 @@ ui_sprite = pygame.transform.scale_by(ui_sprite,scale)
 #                "run": utils.animation([0,2],[.2,.2])}
 #player = utils.animated_sprite(player_anims,"res/img/player.png",utils.vector2(128,128),scale,16,"idle")
 player = player.player(utils.vector2(128,128),scale,"res/img/player.png",16,pygame.Rect(128,128,40,60),pygame.Rect(128,128,40,60))
-kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,90.0,16)
+kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,64.0,16)
 
 previous_time = 0
 current_time = 0
@@ -241,6 +241,7 @@ while running:
         enemy.draw(screen,camera_pos)
         for i in doors:
             i.draw(screen,camera_pos)
+            i.check_collision_player(player.collision_box,camera_pos)
         screen.blit(ui_sprite,(0,0))
           # --- UI de recharge du kayou ---
         bar_x = 250
