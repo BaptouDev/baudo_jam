@@ -54,6 +54,8 @@ def dir(start_point,last_dir,chamber,size,fail=0):
         return_point = (start_point[0]-1,start_point[1])
     elif init_dir == 3:
         return_point = (start_point[0],start_point[1]-1)
+    if return_point[0]<0 or return_point[0]>=len(chamber) or return_point[1]<0 or return_point[1]>=len(chamber):
+        return dir(start_point,last_dir,chamber,fail+1)
     if chamber[return_point[0]][return_point[1]] != -1:
         return dir(start_point,last_dir,chamber,fail+1)
     return return_point,init_dir
@@ -134,5 +136,11 @@ class door:
             c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
         if c_rect.colliderect(player):
             print("yeah")
+    def draw_rect(self,screen):
+        if self.orientation%2==0:
+            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
+        else:
+            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
+        pygame.draw.rect(screen,"green",c_rect)
     def draw(self,screen,camera_pos):
         screen.blit(self.door_sprite,(self.pos-camera_pos).to_tuple())

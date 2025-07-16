@@ -60,6 +60,9 @@ current_cam_speed = 0.0
 cursor_pos = (0,0)
 current_selected_tile_index = 0
 current_selected_entity_index = 0
+#for i in range(100):
+#    layout = gen.generate_chamber(rooms,15,10,scale)
+
 layout = gen.generate_chamber(rooms,15,10,scale)
 rooms_in_layout = []
 room_in_index = 0
@@ -241,6 +244,7 @@ while running:
         enemy.draw(screen,camera_pos)
         for i in doors:
             i.draw(screen,camera_pos)
+            i.draw_rect(screen)
             i.check_collision_player(player.collision_box,camera_pos)
         screen.blit(ui_sprite,(0,0))
           # --- UI de recharge du kayou ---
