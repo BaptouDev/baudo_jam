@@ -1,5 +1,20 @@
 from . import utils
 import pygame
+import random
+import math
+
+class GrassParticle(utils.fadeout_sprite):
+    def __init__(self, pos, scale, fadeout_speed, base_alpha, surf):
+        super().__init__(pos, scale, fadeout_speed, base_alpha, surf)
+        angle = random.uniform(0, 2*3.14159)
+        speed = random.uniform(40, 80)
+        self.vel = utils.vector2(math.cos(angle), math.sin(angle)) * speed
+    def update(self, dt):
+        self.pos = self.pos + self.vel * dt
+        self.vel = self.vel * 0.85
+        self.current_alpha -= dt*self.fadeout_speed
+        self.current_alpha = int(self.current_alpha)
+
 class player:
     def __init__(self,pos:utils.vector2,scale,sheet_path:str,tile_size:int,collision_box:pygame.Rect,hurtbox:pygame.Rect):
         player_anims = {"idle": utils.animation([0,1],[.3,.3]),
@@ -24,6 +39,10 @@ class player:
         self.created_sprite_countdown = self.nb_fadeout_sprites
         self.created_sprite_offset = 0#.01
         #self.temp_fadeout_sprite = utils.fadeout_sprite(self.pos,scale,20,255,self.sprite.images[0])
+        self.grass_particles = []
+        self.grass_particle_timer = 0
+        self.grass_particle_image = pygame.image.load('res/img/grass.png').convert_alpha()
+        self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
@@ -58,6 +77,19 @@ class player:
                 self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
                 self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
 
+        # --- Particules d'herbe ---
+        if self.vel.magnitude_sq() > 0:
+            self.grass_particle_timer -= dt
+            if self.grass_particle_timer <= 0:
+                for _ in range(1):
+                    p = GrassParticle(self.pos.copy() + utils.vector2(self.scale*8, self.scale*16), self.scale, 200, 200, self.grass_particle_image)
+                    self.grass_particles.append(p)
+                self.grass_particle_timer = 0.04
+        # Update grass particles
+        for p in self.grass_particles:
+            p.update(dt)
+        self.grass_particles = [p for p in self.grass_particles if p.current_alpha > 0]
+
         self.pos = self.pos + utils.vector2(self.vel.x, 0) * dt
         self.collision_box.left = self.pos.x + self.offset.x-camera_pos.x
         self.collision_box.top = self.pos.y + self.offset.y-camera_pos.y
@@ -84,3 +116,6 @@ class player:
             i.draw(screen,camera_pos,dt)
         #self.temp_fadeout_sprite.draw(screen,camera_pos,dt)
         self.sprite.draw(screen,dt,camera_pos)
+        # Draw grass particles
+        for p in self.grass_particles:
+            p.draw(screen, camera_pos, dt)
