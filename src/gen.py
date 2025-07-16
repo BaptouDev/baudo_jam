@@ -37,11 +37,11 @@ class room:
 def dir(start_point,last_dir,chamber,size,fail=0):
     if fail >=4:
         return None
-    r = random.randint(0,4)
-    if r == 4 and last_dir !=None:
+    r = random.randint(1,8)
+    if r == 1 and last_dir !=None:
         init_dir = last_dir
     else:
-        init_dir = min(3,r)
+        init_dir = random.randint(0,3)
     #if last_dir != None:
     #    while init_dir %2 == last_dir % 2:
     #        init_dir = random.randint(0,3)
@@ -130,17 +130,17 @@ class door:
             self.pos.x = (pos_in_layout[1]*18+1+8)*tile_size*scale
             self.pos.y = (pos_in_layout[0]*10+1)*tile_size*scale
     def check_collision_player(self,player:pygame.Rect,camera_pos:utils.vector2):
-        if self.orientation%2==0:
-            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
+        if not self.orientation%2==0:
+            c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
         else:
-            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
+            c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
         if c_rect.colliderect(player):
-            print("yeah")
-    def draw_rect(self,screen):
-        if self.orientation%2==0:
-            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
+            return True,self.orientation
+    def draw_rect(self,screen,camera_pos):
+        if not self.orientation%2==0:
+            c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale*2,self.tile_size*self.scale)
         else:
-            c_rect = pygame.Rect(self.pos.x,self.pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
+            c_rect = pygame.Rect(self.pos.x-camera_pos.x,self.pos.y-camera_pos.y,self.tile_size*self.scale,self.tile_size*self.scale*2)
         pygame.draw.rect(screen,"green",c_rect)
     def draw(self,screen,camera_pos):
         screen.blit(self.door_sprite,(self.pos-camera_pos).to_tuple())

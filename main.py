@@ -246,7 +246,7 @@ while running:
         enemy.draw(screen,camera_pos)
         for i in doors:
             i.draw(screen,camera_pos)
-            i.draw_rect(screen)
+            i.draw_rect(screen,camera_pos)
             i.check_collision_player(player.collision_box,camera_pos)
         screen.blit(ui_sprite,(0,0))
           # --- UI de recharge du kayou ---
