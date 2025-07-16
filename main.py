@@ -100,10 +100,21 @@ for i in range(len(layout)):
 collision_layers = []
 for i in rooms_in_layout:
     collision_layers.append(i.main_layer)
+
+kayou_cooldown = kayou.max_throw_time 
+kayou_cooldown_max = kayou.max_throw_time
+
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
     previous_time = current_time
+    if kayou.is_thrown:
+        kayou_cooldown = kayou.max_throw_time - kayou.throw_timer
+        if kayou_cooldown < 0:
+            kayou_cooldown = 0
+    else:
+        if kayou_cooldown == 0:
+            kayou_cooldown = kayou_cooldown_max
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -223,6 +234,16 @@ while running:
         kayou.draw(screen,camera_pos)
         enemy.draw(screen,camera_pos)
         screen.blit(ui_sprite,(0,0))
+          # --- UI de recharge du kayou ---
+        bar_x = 250
+        bar_y = 25
+        bar_w = 120
+        bar_h = 24
+        pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
+        fill_ratio = kayou_cooldown / kayou_cooldown_max
+        pygame.draw.rect(screen, (80,180,255), (bar_x+2, bar_y+2, int((bar_w-4)*fill_ratio), bar_h-4), border_radius=6)
+        pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
+        font.render_to(screen, (bar_x+bar_w+10, bar_y), "Kayou", (255,255,255))
         
     pygame.display.flip()
 
