@@ -47,7 +47,7 @@ def load_world(path):
         rows = list(reader)
 def sheet_to_list(sheet,tile_size,scale):
     images = []
-    width,height = sheet.size
+    width,height = sheet.get_size()
     n_rows = int(width / tile_size)
     n_columns = int(height / tile_size)
     for i in range(n_rows):
@@ -253,8 +253,23 @@ class rotated_sprite:
         self.sprite = pygame.image.load(img_path).convert_alpha()
         self.sprite = pygame.transform.scale_by(self.sprite,self.scale)
         self.is_visible = is_visible
+        self.is_thrown = False
+        self.velocity = vector2(0,0)
+        self.throw_timer = 0
+        self.max_throw_time = 1.0  # secondes
+    def throw(self, direction:vector2, speed:float):
+        self.is_thrown = True
+        self.velocity = direction.normalize() * speed
+        self.throw_timer = 0
     def update(self,new_pos:vector2,dt:float):
-        self.pos = new_pos
+        if self.is_thrown:
+            self.pos = self.pos + self.velocity * dt
+            self.throw_timer += dt
+            if self.throw_timer > self.max_throw_time:
+                self.is_thrown = False
+                self.velocity = vector2(0,0)
+        else:
+            self.pos = new_pos
         #self.rot+=dt*50
     def face_mouse(self,camera_pos:vector2):
         mouse_pos = vector2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])+camera_pos
