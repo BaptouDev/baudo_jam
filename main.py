@@ -53,7 +53,7 @@ current_time = 0
 room_transition_time = .5
 room_transition_timer = 50
 
-re_enter_room_cooldown = 2
+re_enter_room_cooldown = 1.5
 re_enter_room_timer = 0
 camera_start_pos = utils.vector2(0,0)
 player_start_pos = utils.vector2(0,0)

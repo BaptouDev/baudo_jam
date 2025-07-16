@@ -18,7 +18,7 @@ class GrassParticle(utils.fadeout_sprite):
 class player:
     def __init__(self,pos:utils.vector2,scale,sheet_path:str,tile_size:int,collision_box:pygame.Rect,hurtbox:pygame.Rect):
         player_anims = {"idle": utils.animation([0,1],[.3,.3]),
-                "run": utils.animation([0,2],[.2,.2])}
+                "run": utils.animation([2,3],[.2,.2])}
         self.sprite = utils.animated_sprite(player_anims,sheet_path,pos,scale,tile_size,"idle")
         self.pos = pos
         self.scale = scale
