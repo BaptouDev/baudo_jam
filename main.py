@@ -157,6 +157,10 @@ while running:
                 rooms[current_room_index].change_tile(cursor_pos,-1)
             else:
                 entity_maps[current_room_index].change_tile(cursor_pos,-1)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
+            mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
+            direction = mouse_pos - kayou.pos
+            kayou.throw(direction, 800)
 
     if edit_mode:
         keys = pygame.key.get_pressed()
