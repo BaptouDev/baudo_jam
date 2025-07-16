@@ -74,24 +74,24 @@ for i in range(len(layout)):
             rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{}))
             if (0<i):
                 if layout[i-1][j] !=-1:
-                    #rooms_in_layout[x].change_tile_temp((8,0),"-1")
-                    #rooms_in_layout[x].change_tile_temp((9,0),"-1")
+                    rooms_in_layout[x].change_tile_temp((8,0),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,0),"-1")
                     doors.append(gen.door("res/img/door.png",3,16,scale,(i,j)))
             if i<len(layout[0])-1:
                 if layout[i+1][j] !=-1:
-                    #rooms_in_layout[x].change_tile_temp((8,9),"-1")
-                    #rooms_in_layout[x].change_tile_temp((9,9),"-1")
+                    rooms_in_layout[x].change_tile_temp((8,9),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,9),"-1")
                     doors.append(gen.door("res/img/door.png",1,16,scale,(i,j)))
             if (0<j):
                 if layout[i][j-1] !=-1:
-                    #rooms_in_layout[x].change_tile_temp((0,4),"-1")
-                    #rooms_in_layout[x].change_tile_temp((0,5),"-1")
+                    rooms_in_layout[x].change_tile_temp((0,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((0,5),"-1")
                     doors.append(gen.door("res/img/door.png",2,16,scale,(i,j)))
                     
             if j<len(layout[1])-1:
                 if layout[i][j+1] !=-1:
-                    #rooms_in_layout[x].change_tile_temp((17,4),"-1")
-                    #rooms_in_layout[x].change_tile_temp((17,5),"-1")
+                    rooms_in_layout[x].change_tile_temp((17,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((17,5),"-1")
                     doors.append(gen.door("res/img/door.png",0,16,scale,(i,j)))
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
@@ -197,8 +197,8 @@ while running:
         cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
     else:
         player.update(delta_time,camera_pos,collision_layers)
-        kayou.update(player.pos,delta_time)
-        kayou.face_mouse(camera_pos)
+        kayou.update(player.pos,delta_time,collision_layers,camera_pos)
+        #kayou.face_mouse(camera_pos)
         enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
         #if rooms[current_room_index].check_player_collisions(player,camera_pos):
         #    if player.vel.x != 0:

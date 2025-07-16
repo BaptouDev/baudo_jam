@@ -261,21 +261,28 @@ class rotated_sprite:
         self.velocity = vector2(0,0)
         self.throw_timer = 0
         self.max_throw_time = 1
+        self.hitbox = pygame.Rect(4*scale,4*scale,8*scale,8*scale)
     def throw(self, direction:vector2, speed:float):
         self.is_thrown = True
         self.velocity = speed #* direction.normalize()
         self.throw_timer = 0
-    def update(self,new_pos:vector2,dt:float):
+    def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2):
+        r_x = cos(radians(-self.rot))
+        r_y = sin(radians(-self.rot))
+        self.hitbox.left = self.pos.x + r_x*self.dist + 4*self.scale-camera_pos.x
+        self.hitbox.top = self.pos.y + r_y*self.dist + 4*self.scale-camera_pos.y
         if self.is_thrown:
             #self.pos = self.pos + self.velocity * dt
             self.dist+=self.velocity*dt
             self.throw_timer += dt
-            if self.throw_timer > self.max_throw_time:
+            if self.throw_timer > self.max_throw_time or check_player_collision_list(self.hitbox,collision_layers,camera_pos):
                 self.is_thrown = False
                 self.velocity = vector2(0,0)
                 self.dist = self.base_dist
+           
         else:
             self.pos = new_pos
+        self.face_mouse(camera_pos)
         #self.rot+=dt*50
     def face_mouse(self,camera_pos:vector2):
         if not self.is_thrown:
