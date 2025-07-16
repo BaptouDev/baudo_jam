@@ -53,7 +53,7 @@ current_time = 0
 room_transition_time = .5
 room_transition_timer = 50
 
-re_enter_room_cooldown = 1
+re_enter_room_cooldown = 2
 re_enter_room_timer = 0
 camera_start_pos = utils.vector2(0,0)
 player_start_pos = utils.vector2(0,0)
@@ -113,7 +113,7 @@ for i in range(len(layout)):
                 camera_goal_pos = rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
                 player.pos= rooms_in_layout[x].pos.copy()+utils.vector2(9*16*scale,5*16*scale)
                 rooms_in_index = x
-                current_room_pos = (i,j)
+                current_room_pos = (j,i)
             x+=1
 
 collision_layers = []
@@ -294,17 +294,15 @@ while running:
                     player_start_pos = player.pos.copy()
                     camera_start_pos = camera_pos.copy()
                     c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
-                    print(layout)
-                    for i in range(18):
-                        for j in range(10):
-                            if c[j][i]=="0":
-                                current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*18*16*scale+i*16*scale,current_room_pos[1]*10*16*scale+j*16*scale),scale,"","res/img/little_guy.png"))
-                                print(current_room_pos)
-                    
+                    for i in range(len(c)):
+                        for j in range(len(c[0])):
+                            if c[i][j] =="0":
+                                current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+j*16*scale,current_room_pos[1]*16*scale*10+i*16*scale),scale,"","res/img/little_guy.png"))
             if room_transition_timer <=room_transition_time:
                 t = min(room_transition_timer / room_transition_time, 1)
                 camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)
                 player.pos = utils.lerp(player_start_pos,player_goal_pos,t)
+            
             else:
                 camera_pos = camera_goal_pos
 
