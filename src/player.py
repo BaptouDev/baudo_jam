@@ -14,15 +14,15 @@ class player:
         self.last_pos = self.pos
         self.offset = utils.vector2(12,4)
         self.dash_speed = 1500
-        self.dash_duration = .15
+        self.dash_duration = .10
         self.dashing_timer = 0
         self.dash_cooldown = 1.5
         self.dash_time = 0
         self.fadeout_sprites = []
-        self.nb_fadeout_sprites = 3
+        self.nb_fadeout_sprites = 5
         self.sprite_creation_timer = 0
-        self.created_sprite_countdown = 3
-        self.created_sprite_offset = .01
+        self.created_sprite_countdown = self.nb_fadeout_sprites
+        self.created_sprite_offset = 0#.01
         #self.temp_fadeout_sprite = utils.fadeout_sprite(self.pos,scale,20,255,self.sprite.images[0])
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
@@ -53,6 +53,7 @@ class player:
         if self.dashing_timer >=0:
             self.vel = self.vel.normalize() * self.dash_speed
             if self.sprite_creation_timer <=0 and self.created_sprite_countdown >=0:
+                print("yeah")
                 self.created_sprite_countdown -= 1
                 self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
                 self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset

@@ -169,6 +169,34 @@ def check_player_collision_list(player:pygame.rect,ls:list,camera_pos):
             return True
     return False
 
+class entity_map:
+    def __init__(self,map_path):
+        self.map_path = map_path
+        self.map = []
+        self.reload_map()
+    def reload_map(self):
+        with open(self.map_path,"r",newline="") as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+            self.map = rows
+        self.w = len(self.map)
+        self.h = len(self.map[0])
+    def init_zero_map(self,w,h):
+        map = np.full((h,w),-1)
+        map = map.astype(int)
+        with open(self.map_path,"w",newline="") as file:
+                file.truncate()
+                writer = csv.writer(file)
+                writer.writerows(map)
+        self.reload_map()
+    def change_tile(self,pos:tuple,entity_index:int):
+        self.map[pos[1]][pos[0]] = entity_index
+        with open(self.map_path,"w",newline="") as file:
+                file.truncate()
+                writer = csv.writer(file)
+                writer.writerows(self.map)
+        self.reload_map()
+
 class animation:
     def __init__(self,frames:list,durations:list):
         self.frames = frames

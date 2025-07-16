@@ -5,7 +5,7 @@ import numpy as np
 import random
 
 class room:
-    def __init__(self,map_path:str,grass_path:str,sheet_path:str,tile_size,pos:utils.vector2,scale:float,grass_values:list,enemies:dict,objects:dict,w=18,h=10):
+    def __init__(self,map_path:str,grass_path:str,sheet_path:str,tile_size,pos:utils.vector2,scale:float,grass_values:list,entities:dict,w=18,h=10):
         self.map_path = map_path
         self.grass_path = grass_path
         self.sheet_path = sheet_path
@@ -16,8 +16,7 @@ class room:
         self.w=w
         self.h=h
         utils.rand_scatter_map(self.grass_layer,grass_values,"",h,w)
-        self.enemies = enemies
-        self.objects = objects
+        self.entities = entities
     def change_tile_temp(self,pos:tuple,tile_index):
         utils.change_tile_temp(self.main_layer,pos,tile_index)
     def change_tile(self,pos:tuple,tile_index):

@@ -4,6 +4,7 @@ from src import utils
 from src import gen
 from src import player
 from src import enemy
+from src import entity
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720))
@@ -26,8 +27,12 @@ values = [utils.weighted_value(0,1),
           utils.weighted_value(8,1)]
 room_names = ["test","shop","start","room1","room2"]
 rooms = []
+entities = [entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_guy.png"),
+            entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png")]
+entity_maps=[]
 for i in room_names:
-    rooms.append(gen.room("res/rooms/"+i+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64),4,values,{},{}))
+    rooms.append(gen.room("res/rooms/"+i+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64),4,values,{}))
+    entity_maps.append(utils.entity_map("res/rooms/entity_maps/"+i+"_e.csv"))
     #rooms.append(utils.level("res/rooms/"+i+".csv","res/img/sheet.png",16,4,utils.vector2(64,64),False,True))
 
 current_room_index = 0
@@ -54,15 +59,17 @@ edit_mode = False
 current_cam_speed = 0.0
 cursor_pos = (0,0)
 current_selected_tile_index = 0
+current_selected_entity_index = 0
 layout = gen.generate_chamber(rooms,15,10,scale)
 rooms_in_layout = []
 room_in_index = 0
 x=0
+edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
 for i in range(len(layout)):
     for j in range(len(layout[0])):
         if layout[i][j]!=-1:
             #rooms_in_layout.append(rooms[layout[i][j]].copy())
-            rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{},{}))
+            rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{}))
             if (0<i):
                 if layout[i-1][j] !=-1:
                     rooms_in_layout[x].change_tile_temp((8,0),"-1")
@@ -99,10 +106,13 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
+            if event.key == pygame.K_r and edit_mode:
                 #w = int(input("Width of the map:"))
                 #h = int(input("Height of the map:"))
-                rooms[current_room_index].clear_main_layer()
+                if edit_mode_adding_entities == False:
+                    rooms[current_room_index].clear_main_layer()
+                else:
+                    entity_maps[current_room_index].init_zero_map(18,10)
             if event.key == pygame.K_e:
                 edit_mode = not edit_mode
                 if not edit_mode:
@@ -112,21 +122,41 @@ while running:
                     current_room_index +=1
                 else:
                     current_room_index=0
+            if event.key == pygame.K_c and edit_mode:
+                edit_mode_adding_entities = not edit_mode_adding_entities
             if event.key == pygame.K_KP_PLUS:
-                if current_selected_tile_index < len(rooms[current_room_index].main_layer.images)-1:
-                    current_selected_tile_index+=1
+                if not edit_mode_adding_entities:
+                    if current_selected_tile_index < len(rooms[current_room_index].main_layer.images)-1:
+                        current_selected_tile_index+=1
+                    else:
+                        current_selected_tile_index = 0
                 else:
-                    current_selected_tile_index = 0
+                    if current_selected_entity_index < len(entities)-1:
+                        current_selected_entity_index+=1
+                    else:
+                        current_selected_entity_index = 0
             if event.key == pygame.K_KP_MINUS:
-                if current_selected_tile_index > 0:
-                    current_selected_tile_index-=1
+                if not edit_mode_adding_entities:
+                    if current_selected_tile_index > 0:
+                        current_selected_tile_index-=1
+                    else:
+                        current_selected_tile_index = len(rooms[current_room_index].main_layer.images)-1
                 else:
-                    current_selected_tile_index = len(rooms[current_room_index].main_layer.images)-1
+                    if current_selected_entity_index > 0:
+                        current_selected_entity_index-=1
+                    else:
+                        current_selected_entity_index = len(entities)-1
         
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
-            rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+            if not edit_mode_adding_entities:
+                rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+            else:
+                entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
-            rooms[current_room_index].change_tile(cursor_pos,-1)
+            if not edit_mode_adding_entities:
+                rooms[current_room_index].change_tile(cursor_pos,-1)
+            else:
+                entity_maps[current_room_index].change_tile(cursor_pos,-1)
 
     if edit_mode:
         keys = pygame.key.get_pressed()
@@ -171,7 +201,16 @@ while running:
             screen.blit(transparent_surface,(0,0))
         #rooms[current_room_index].debug_draw_all_tiles(screen)
         font.render_to(screen,(10,10),room_names[current_room_index], "white")
-        screen.blit(rooms[current_room_index].main_layer.images[current_selected_tile_index],(64*19,0))
+        if edit_mode_adding_entities == False:
+            font.render_to(screen,(138,10),"Tile Editing", "white")
+            screen.blit(rooms[current_room_index].main_layer.images[current_selected_tile_index],(64*19,0))
+        else:
+            font.render_to(screen,(138,10),"Entity Editing", "white")
+            entities[current_selected_entity_index].draw_display(screen,(64*19,0))
+            for i in range(entity_maps[current_room_index].h):
+                for j in range(entity_maps[current_room_index].w):
+                    if entity_maps[current_room_index].map[j][i]!="-1":
+                        entities[int(entity_maps[current_room_index].map[j][i])].draw_display(screen,(64+i*16*scale,64+j*16*scale))
     else:
         
         player.draw(screen,camera_pos,delta_time)
