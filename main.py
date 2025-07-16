@@ -169,7 +169,7 @@ while running:
                         entity_maps[current_room_index].init_zero_map(18,10)
                 if event.key == pygame.K_e:
                     edit_mode = not edit_mode
-                    if not edit_mode:
+                    if edit_mode:
                         camera_pos = utils.vector2(0,0)
                 if event.key == pygame.K_g and edit_mode:
                     if current_room_index < len(rooms)-1:
@@ -372,7 +372,7 @@ while running:
             pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x+110, bar_y-34))
             
-            pygame.display.flip()
+        pygame.display.flip()
 
     elif state == CREDIT:
         for y in range(720):
