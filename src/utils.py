@@ -160,7 +160,9 @@ def rand_scatter_map(l:level,weighted_values:list,map_path,w,h):
     map = map.astype(int)
     for i in range(w):
         for j in range(h):
-            r = random.randint(0,len(weighted_values)-1)
+            r = random.randint(0,len(weighted_values)-1+50)
+            if r>len(weighted_values)-1:
+                r=0
             map[i][j] = weighted_values[r].value
     l.load_map_from_list(map.tolist())
     #with open(map_path,"w",newline="") as file:
