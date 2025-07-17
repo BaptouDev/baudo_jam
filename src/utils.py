@@ -281,7 +281,7 @@ class rotated_sprite:
         import random
         for _ in range(n):
             angle = random.uniform(0, 2*3.14159)
-            speed = random.uniform(100, 300)
+            speed = random.uniform(300, 900)
             vel = vector2(math.cos(angle), math.sin(angle)) * speed
             fade = fadeout_sprite(pos.copy(), self.scale/2, random.uniform(200, 300), 200, self.particle_image)
             fade.vel = vel
