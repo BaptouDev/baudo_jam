@@ -117,6 +117,9 @@ class player:
         if powerup_name == "health":
             self.max_health += 2
             self.current_health += 2
+        if powerup_name == "double_dash":
+            self.dash_speed = 2000
+            self.dash_duration = .15
     def draw(self,screen,camera_pos,dt):
         self.sprite.update_pos(self.pos)
         for i in self.fadeout_sprites:

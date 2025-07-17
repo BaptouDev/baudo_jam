@@ -1,6 +1,7 @@
 import pygame
 import pygame.freetype
 import numpy as np
+import random
 from src import utils
 from src import gen
 from src import player
@@ -54,6 +55,12 @@ recharge_bar = pygame.transform.scale_by(pygame.image.load("res/img/recharge_bar
 
 powerup_images = utils.sheet_to_list(pygame.image.load("res/img/powerup.png"),16,scale)
 
+powerups = [utils.powerup_pickup("health","2 Coeurs en plus",powerup_images[0],scale),
+            utils.powerup_pickup("double_dash","Un dash plus rapide",powerup_images[1],scale),
+            utils.powerup_pickup("fast_rock","Kayou plus rapide",powerup_images[3],scale),
+            utils.powerup_pickup("big_rock","Gros Kayou",powerup_images[4],scale),
+            utils.powerup_pickup("exploding_rock","Kayou explosif",powerup_images[6],scale)]
+current_pickups = []
 
 previous_time = 0
 current_time = 0
@@ -136,6 +143,18 @@ for i in range(len(layout)):
                 rooms_in_layout[x].been_explored = True
                 rooms_in_index = x
                 current_room_pos = (j,i)
+                r = random.randint(0,len(powerups)-1)
+                powerups[r].pos = utils.vector2(j*scale*16*18+16*scale*5,i*scale*16*10+16*4*scale)
+                powerups[r].interact_rect.left = powerups[r].pos.x
+                powerups[r].interact_rect.top = powerups[r].pos.y
+                current_pickups.append(powerups[r])
+                a = random.randint(0,len(powerups)-1)
+                while a==r:
+                    a = random.randint(0,len(powerups)-1)
+                powerups[a].pos = utils.vector2(j*scale*16*18+16*scale*10,i*scale*16*10+16*4*scale)
+                powerups[a].interact_rect.left = powerups[a].pos.x
+                powerups[a].interact_rect.top = powerups[a].pos.y
+                current_pickups.append(powerups[a])
             if layout[i][j] ==1:
                 rooms_in_layout[x].been_explored = True
             x+=1
@@ -192,7 +211,10 @@ while running:
         elif state == GAME:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    player.pickup_powerup("health")
+                    for i in current_pickups:
+                        if i.interact_rect.colliderect(player.collision_box):
+                            print("yeah")
+                            player.pickup_powerup(i.name)
                 if event.key == pygame.K_r and edit_mode:
                     if edit_mode_adding_entities == False:
                         rooms[current_room_index].clear_main_layer()
@@ -440,7 +462,9 @@ while running:
             for i in doors:
                 i.draw(screen,camera_pos)
         else:
-            
+
+            for i in current_pickups:
+                i.draw(screen,camera_pos)
             player.draw(screen,camera_pos,delta_time)
             kayou.draw(screen,camera_pos)
             for i in current_entities:
@@ -449,6 +473,7 @@ while running:
             for i in doors:
                 i.draw(screen,camera_pos)
                 #i.draw_rect(screen,camera_pos)
+            
             screen.blit(ui_sprite,(0,0))
             for i in range(player.max_health):
                 if i<=player.current_health-1:
@@ -469,7 +494,7 @@ while running:
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
             
         pygame.display.flip()
-        print(1/delta_time)
+        #print(1/delta_time)
 
     elif state == CREDIT:
         for y in range(720):

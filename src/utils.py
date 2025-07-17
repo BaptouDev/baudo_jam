@@ -344,6 +344,12 @@ class fadeout_sprite:
         self.fadeout_sprite.set_alpha(self.current_alpha)
         screen.blit(self.fadeout_sprite,(self.pos-camera_pos).to_tuple())
 
-"""class powerup:
-    def __init__(self,name:str):
-        pass"""
+class powerup_pickup:
+    def __init__(self,name:str,description:str,image,scale:float):
+        self.name = name
+        self.description = description
+        self.image = image
+        self.pos = vector2(0,0)
+        self.interact_rect = pygame.Rect(self.pos.x,self.pos.y,16*scale,16*scale)
+    def draw(self,screen:pygame.Surface,camera_pos:vector2):
+        screen.blit(self.image,(self.pos-camera_pos).to_tuple())
