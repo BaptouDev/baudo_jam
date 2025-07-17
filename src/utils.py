@@ -269,7 +269,7 @@ class rotated_sprite:
         self.is_thrown = False
         self.velocity = vector2(0,0)
         self.throw_timer = 0
-        self.max_throw_time = 2
+        self.max_throw_time = .5
         self.hitbox = pygame.Rect(4*scale,4*scale,8*scale,8*scale)
         self.particles = []
         self.particle_image = pygame.transform.scale(self.sprite, (int(self.tile_size*self.scale/2), int(self.tile_size*self.scale/2)))
