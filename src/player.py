@@ -45,6 +45,7 @@ class player:
         self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
         self.max_health = 6
         self.current_health = 5
+        self.powerups_has = {"health":False,"double_dash":False,"speedy_rock":False,"big_rock":False,"explosive_rock":False}
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
@@ -68,13 +69,12 @@ class player:
             self.created_sprite_countdown = self.nb_fadeout_sprites
             self.dash_time = self.dash_cooldown
             self.dashing_timer = self.dash_duration
-            self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
+            self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,250,200,self.sprite.images[0]))
             self.created_sprite_countdown-=1
             self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
         if self.dashing_timer >=0:
             self.vel = self.vel.normalize() * self.dash_speed
             if self.sprite_creation_timer <=0 and self.created_sprite_countdown >=0:
-                print("yeah")
                 self.created_sprite_countdown -= 1
                 self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
                 self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
@@ -112,6 +112,11 @@ class player:
             self.sprite.change_anim("idle")
         #self.temp_fadeout_sprite.update_pos(self.pos + utils.vector2(64,64))
         self.last_pos = self.pos
+    def pickup_powerup(self,powerup_name:str):
+        self.powerups_has[powerup_name] = True
+        if powerup_name == "health":
+            self.max_health += 2
+            self.current_health += 2
     def draw(self,screen,camera_pos,dt):
         self.sprite.update_pos(self.pos)
         for i in self.fadeout_sprites:

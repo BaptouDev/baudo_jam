@@ -1,5 +1,6 @@
 import pygame
 import pygame.freetype
+import numpy as np
 from src import utils
 from src import gen
 from src import player
@@ -7,7 +8,7 @@ from src import player
 from src import entity
 
 pygame.init()
-screen = pygame.display.set_mode((1280,720))
+screen = pygame.display.set_mode((1270,720))
 running = True
 scale = 4
 cam_speed = 200
@@ -36,9 +37,9 @@ for i in room_names:
 current_room_index = 0
 
 
-ui_sprite = pygame.image.load("res/img/ui.png")
+ui_sprite = pygame.image.load("res/img/ui.png").convert_alpha()
 ui_sprite = pygame.transform.scale_by(ui_sprite,scale)
-little_rock_img = pygame.image.load("res/img/little_rock.png")
+little_rock_img = pygame.image.load("res/img/rock.png")
 little_rock_img = pygame.transform.scale_by(little_rock_img,5)
 
 
@@ -49,7 +50,10 @@ player = player.player(utils.vector2(128,128),scale,"res/img/player.png",16,pyga
 kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,64.0,16)
 
 heart_images = utils.sheet_to_list(pygame.image.load("res/img/heart.png"),16,scale)
-recharge_bar = pygame.transform.scale_by(pygame.image.load("res/img/recharge_bar.png"),scale)
+recharge_bar = pygame.transform.scale_by(pygame.image.load("res/img/recharge_bar.png").convert_alpha(),scale)
+
+powerup_images = utils.sheet_to_list(pygame.image.load("res/img/powerup.png"),16,scale)
+
 
 previous_time = 0
 current_time = 0
@@ -85,6 +89,7 @@ x=0
 current_room_pos = (0,0)
 edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
 doors = []
+#entities_creation_lookup_table = 
 for i in range(len(layout)):
     for j in range(len(layout[0])):
         if layout[i][j]!=-1:
@@ -153,6 +158,10 @@ button_play_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h
 button_credit_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
 button_quit_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
 
+bounce_rects = [pygame.Rect(0,0,16*18*scale,16*scale),pygame.Rect(0,9*16*scale,16*18*scale,16*scale),pygame.Rect(0,0,16*scale,10*16*scale),pygame.Rect(17*16*scale,0,16*scale,10*16*scale)]
+
+
+
 while running:
     current_time = pygame.time.get_ticks()
     delta_time = (current_time-previous_time)/1000
@@ -164,8 +173,9 @@ while running:
         if kayou_cooldown < 0:
             kayou_cooldown = 0
     else:
-        if kayou_cooldown == 0:
-            kayou_cooldown = kayou_cooldown_max
+        kayou_cooldown = kayou_cooldown_max
+        #if kayou_cooldown == 0:
+        #    kayou_cooldown = kayou_cooldown_max
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -181,6 +191,8 @@ while running:
                     state = CREDIT
         elif state == GAME:
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.pickup_powerup("health")
                 if event.key == pygame.K_r and edit_mode:
                     if edit_mode_adding_entities == False:
                         rooms[current_room_index].clear_main_layer()
@@ -454,9 +466,10 @@ while running:
             pygame.draw.rect(screen, (80,180,255), (bar_x, bar_y, int((bar_w)*fill_ratio), bar_h), border_radius=0)
             screen.blit(recharge_bar,(bar_x,bar_y))
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
-            screen.blit(little_rock_img, (bar_x+110, bar_y-34))
+            screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
             
         pygame.display.flip()
+        print(1/delta_time)
 
     elif state == CREDIT:
         for y in range(720):

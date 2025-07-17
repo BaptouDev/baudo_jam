@@ -343,3 +343,7 @@ class fadeout_sprite:
         self.current_alpha = int(self.current_alpha)
         self.fadeout_sprite.set_alpha(self.current_alpha)
         screen.blit(self.fadeout_sprite,(self.pos-camera_pos).to_tuple())
+
+"""class powerup:
+    def __init__(self,name:str):
+        pass"""
