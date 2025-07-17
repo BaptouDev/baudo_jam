@@ -351,5 +351,8 @@ class powerup_pickup:
         self.image = image
         self.pos = vector2(0,0)
         self.interact_rect = pygame.Rect(self.pos.x,self.pos.y,16*scale,16*scale)
+    def update(self,camera_pos):
+        self.interact_rect.left = self.pos.x - camera_pos.x
+        self.interact_rect.top = self.pos.y - camera_pos.y
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
         screen.blit(self.image,(self.pos-camera_pos).to_tuple())

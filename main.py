@@ -213,9 +213,11 @@ while running:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     for i in current_pickups:
+                        i.update(camera_pos)
                         if i.interact_rect.colliderect(player.collision_box):
-                            print("yeah")
                             player.pickup_powerup(i.name)
+                            current_pickups.clear()
+                            break
                 if event.key == pygame.K_r and edit_mode:
                     if edit_mode_adding_entities == False:
                         rooms[current_room_index].clear_main_layer()
