@@ -9,6 +9,7 @@ from src import entity
 
 pygame.init()
 screen = pygame.display.set_mode((1270,720))
+clock = pygame.time.Clock() 
 running = True
 scale = 4
 cam_speed = 200
@@ -164,7 +165,7 @@ bounce_rects = [pygame.Rect(0,0,16*18*scale,16*scale),pygame.Rect(0,9*16*scale,1
 
 while running:
     current_time = pygame.time.get_ticks()
-    delta_time = (current_time-previous_time)/1000
+    delta_time = clock.tick() / 1000 
     previous_time = current_time
     room_transition_timer+= delta_time
     re_enter_room_timer-= delta_time
@@ -467,9 +468,9 @@ while running:
             screen.blit(recharge_bar,(bar_x,bar_y))
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
-            
+
+        font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
         pygame.display.flip()
-        print(1/delta_time)
 
     elif state == CREDIT:
         for y in range(720):
