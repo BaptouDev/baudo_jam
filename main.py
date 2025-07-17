@@ -88,32 +88,47 @@ for i in range(len(layout)):
             rooms_in_layout.append(gen.room("res/rooms/"+room_names[layout[i][j]]+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10),scale,values,{}))
             if (0<i):
                 if layout[i-1][j] !=-1:
-                    rooms_in_layout[x].change_tile_temp((8,0),"-1")
-                    rooms_in_layout[x].change_tile_temp((9,0),"-1")
-                    doors.append(gen.door("res/img/door.png",3,16,scale,(i,j)))
+                    """rooms_in_layout[x].change_tile_temp((8,0),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,0),"-1")"""
+                    if layout[i][j]==2:
+                        doors.append(gen.door("res/img/door.png",3,16,scale,(i,j),x))
+                    else:
+                        doors.append(gen.door("res/img/door.png",3,16,scale,(i,j),x,False))
             if i<len(layout[0])-1:
                 if layout[i+1][j] !=-1:
-                    rooms_in_layout[x].change_tile_temp((8,9),"-1")
-                    rooms_in_layout[x].change_tile_temp((9,9),"-1")
-                    doors.append(gen.door("res/img/door.png",1,16,scale,(i,j)))
+                    """"rooms_in_layout[x].change_tile_temp((8,9),"-1")
+                    rooms_in_layout[x].change_tile_temp((9,9),"-1")"""
+                    if layout[i][j] ==2:
+                        doors.append(gen.door("res/img/door.png",1,16,scale,(i,j),x))
+                    else:
+                        doors.append(gen.door("res/img/door.png",1,16,scale,(i,j),x,False))
             if (0<j):
                 if layout[i][j-1] !=-1:
-                    rooms_in_layout[x].change_tile_temp((0,4),"-1")
-                    rooms_in_layout[x].change_tile_temp((0,5),"-1")
-                    doors.append(gen.door("res/img/door.png",2,16,scale,(i,j)))
+                    """rooms_in_layout[x].change_tile_temp((0,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((0,5),"-1")"""
+                    if layout[i][j]==2:
+                        doors.append(gen.door("res/img/door.png",2,16,scale,(i,j),x))
+                    else:
+                        doors.append(gen.door("res/img/door.png",2,16,scale,(i,j),x,False))
                     
             if j<len(layout[1])-1:
                 if layout[i][j+1] !=-1:
-                    rooms_in_layout[x].change_tile_temp((17,4),"-1")
-                    rooms_in_layout[x].change_tile_temp((17,5),"-1")
-                    doors.append(gen.door("res/img/door.png",0,16,scale,(i,j)))
+                    """rooms_in_layout[x].change_tile_temp((17,4),"-1")
+                    rooms_in_layout[x].change_tile_temp((17,5),"-1")"""
+                    if layout[i][j]==2:
+                        doors.append(gen.door("res/img/door.png",0,16,scale,(i,j),x))
+                    else:
+                        doors.append(gen.door("res/img/door.png",0,16,scale,(i,j),x,False))
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
                 camera_goal_pos = rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
                 player.pos= rooms_in_layout[x].pos.copy()+utils.vector2(9*16*scale,5*16*scale)
+                rooms_in_layout[x].been_explored = True
                 rooms_in_index = x
                 current_room_pos = (j,i)
+            if layout[i][j] ==1:
+                rooms_in_layout[x].been_explored = True
             x+=1
 
 collision_layers = []
@@ -176,6 +191,10 @@ while running:
                         current_room_index +=1
                     else:
                         current_room_index=0
+                if event.key==pygame.K_k:
+                    current_entities.clear()
+                    #for i in range(len(current_entities)):
+                    #    current_entities[i].is_dead = True
                 if event.key == pygame.K_c and edit_mode:
                     edit_mode_adding_entities = not edit_mode_adding_entities
                 if event.key == pygame.K_KP_PLUS:
@@ -271,33 +290,77 @@ while running:
             kayou.update(player.pos,delta_time,collision_layers,camera_pos)
             #kayou.face_mouse(camera_pos)
             enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
+            for i in range(len(current_entities)):
+                #if current_entities[i]
+                if current_entities[i].is_dead == True:
+                    current_entities.pop(i)
+            #all_dead = entity.check_all_dead(current_entities)
             for i in doors:
-                if i.check_collision_player(player.collision_box,camera_pos) and re_enter_room_timer <=0:
+                
+                #if i.is_open == False:
+                if len(current_entities)!=0:
+                    if i.orientation ==0:
+                        rooms_in_layout[i.room_index].change_tile_temp((17,4),"34")
+                        rooms_in_layout[i.room_index].change_tile_temp((17,5),"34")
+                    elif i.orientation ==1:
+                        rooms_in_layout[i.room_index].change_tile_temp((8,9),"32")
+                        rooms_in_layout[i.room_index].change_tile_temp((9,9),"32")
+                    elif i.orientation ==2:
+                        rooms_in_layout[i.room_index].change_tile_temp((0,4),"28")
+                        rooms_in_layout[i.room_index].change_tile_temp((0,5),"28")
+                    elif i.orientation ==3:
+                        rooms_in_layout[i.room_index].change_tile_temp((8,0),"30")
+                        rooms_in_layout[i.room_index].change_tile_temp((9,0),"30")
+                else:
+                    if i.orientation ==0:
+                        rooms_in_layout[i.room_index].change_tile_temp((17,4),"-1")
+                        rooms_in_layout[i.room_index].change_tile_temp((17,5),"-1")
+                    elif i.orientation ==1:
+                        rooms_in_layout[i.room_index].change_tile_temp((8,9),"-1")
+                        rooms_in_layout[i.room_index].change_tile_temp((9,9),"-1")
+                    elif i.orientation ==2:
+                        rooms_in_layout[i.room_index].change_tile_temp((0,4),"-1")
+                        rooms_in_layout[i.room_index].change_tile_temp((0,5),"-1")
+                    elif i.orientation ==3:
+                        rooms_in_layout[i.room_index].change_tile_temp((8,0),"-1")
+                        rooms_in_layout[i.room_index].change_tile_temp((9,0),"-1")
+                
+                if i.check_collision_player(player.collision_box,camera_pos) and room_transition_timer >=room_transition_time:
                     if i.orientation ==0:
                         camera_goal_pos = camera_pos + utils.vector2(18*scale*16,0)
-                        player_goal_pos = player.pos + utils.vector2(scale*16*3,0)
+                        player_goal_pos = player.pos + utils.vector2(scale*16*4,0)
                         current_room_pos = (current_room_pos[0]+1,current_room_pos[1])
                     elif i.orientation ==1:
                         camera_goal_pos = camera_pos + utils.vector2(0,10*scale*16)
-                        player_goal_pos = player.pos + utils.vector2(0,scale*16*3)
+                        player_goal_pos = player.pos + utils.vector2(0,scale*16*4)
                         current_room_pos = (current_room_pos[0],current_room_pos[1]+1)
                     elif i.orientation ==2:
                         camera_goal_pos = camera_pos - utils.vector2(18*scale*16,0)
-                        player_goal_pos = player.pos - utils.vector2(scale*16*3,0)
+                        player_goal_pos = player.pos - utils.vector2(scale*16*4,0)
                         current_room_pos = (current_room_pos[0]-1,current_room_pos[1])
                     elif i.orientation ==3:
                         camera_goal_pos = camera_pos - utils.vector2(0,10*scale*16)
-                        player_goal_pos = player.pos - utils.vector2(0,scale*16*3)
+                        player_goal_pos = player.pos - utils.vector2(0,scale*16*4)
                         current_room_pos = (current_room_pos[0],current_room_pos[1]-1)
                     re_enter_room_timer = re_enter_room_cooldown
                     room_transition_timer = 0
                     player_start_pos = player.pos.copy()
                     camera_start_pos = camera_pos.copy()
-                    c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
-                    for i in range(len(c)):
-                        for j in range(len(c[0])):
-                            if c[i][j] =="0":
-                                current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+j*16*scale,current_room_pos[1]*16*scale*10+i*16*scale),scale,"","res/img/little_guy.png"))
+                    #c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
+                    c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
+                    #print(c)
+                    #if rooms_in_layout[i.room_index].been_explored == False:
+                    for j in range(len(c)):
+                        for k in range(len(c[0])):
+                            if c[j][k] =="0":
+                                current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),scale,"","res/img/little_guy.png"))
+                    
+                if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
+                    print("yeah")
+                    rooms_in_layout[i.room_index].been_explored = True
+
+                #if all_dead and (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
+                #        i.is_open = True
             if room_transition_timer <=room_transition_time:
                 t = min(room_transition_timer / room_transition_time, 1)
                 camera_pos = utils.lerp(camera_start_pos,camera_goal_pos,t)

@@ -5,7 +5,7 @@ import numpy as np
 import random
 
 class room:
-    def __init__(self,map_path:str,grass_path:str,sheet_path:str,tile_size,pos:utils.vector2,scale:float,grass_values:list,entities:dict,w=18,h=10):
+    def __init__(self,map_path:str,grass_path:str,sheet_path:str,tile_size,pos:utils.vector2,scale:float,grass_values:list,entities:dict,w=18,h=10,been_explored = False):
         self.map_path = map_path
         self.grass_path = grass_path
         self.sheet_path = sheet_path
@@ -17,6 +17,7 @@ class room:
         self.h=h
         utils.rand_scatter_map(self.grass_layer,grass_values,"",h,w)
         self.entities = entities
+        self.been_explored = been_explored
     def change_tile_temp(self,pos:tuple,tile_index):
         utils.change_tile_temp(self.main_layer,pos,tile_index)
     def change_tile(self,pos:tuple,tile_index):
@@ -93,7 +94,7 @@ def generate_chamber(rooms:list,size,steps,scale):
     return chamber
 
 class door:
-    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,pos_in_layout:tuple,is_open=True):
+    def __init__(self,door_path:str,orientation:int,tile_size:int,scale:float,pos_in_layout:tuple,room_index:int,is_open=True):
         self.is_open=is_open
         self.orientation = orientation
         self.scale = scale
@@ -101,6 +102,8 @@ class door:
         self.door_path = door_path
         self.door_sheet=pygame.image.load(self.door_path)
         self.images = utils.sheet_to_list(self.door_sheet,tile_size,scale)
+        self.room_index = room_index
+        self.pos_in_layout = pos_in_layout
         if self.orientation==0:
             self.door_sprite = pygame.Surface((tile_size*scale,tile_size*scale*2),pygame.SRCALPHA)
             self.door_sprite.blit(self.images[6],(0,0))
