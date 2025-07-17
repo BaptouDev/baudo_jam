@@ -43,6 +43,8 @@ class player:
         self.grass_particle_timer = 0
         self.grass_particle_image = pygame.image.load('res/img/grass.png').convert_alpha()
         self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
+        self.max_health = 6
+        self.current_health = 5
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt

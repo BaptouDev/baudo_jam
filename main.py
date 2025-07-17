@@ -41,11 +41,15 @@ ui_sprite = pygame.transform.scale_by(ui_sprite,scale)
 little_rock_img = pygame.image.load("res/img/little_rock.png")
 little_rock_img = pygame.transform.scale_by(little_rock_img,5)
 
+
 #player_anims = {"idle": utils.animation([0,1],[.3,.3]),
 #                "run": utils.animation([0,2],[.2,.2])}
 #player = utils.animated_sprite(player_anims,"res/img/player.png",utils.vector2(128,128),scale,16,"idle")
 player = player.player(utils.vector2(128,128),scale,"res/img/player.png",16,pygame.Rect(128,128,40,60),pygame.Rect(128,128,40,60))
 kayou = utils.rotated_sprite("res/img/rock.png",player.pos,scale,45,0,64.0,16)
+
+heart_images = utils.sheet_to_list(pygame.image.load("res/img/heart.png"),16,scale)
+recharge_bar = pygame.transform.scale_by(pygame.image.load("res/img/recharge_bar.png"),scale)
 
 previous_time = 0
 current_time = 0
@@ -434,15 +438,22 @@ while running:
                 i.draw(screen,camera_pos)
                 #i.draw_rect(screen,camera_pos)
             screen.blit(ui_sprite,(0,0))
+            for i in range(player.max_health):
+                if i<=player.current_health-1:
+                    screen.blit(heart_images[0],(21*scale + 12*i*scale,0))
+                else:
+                    screen.blit(heart_images[2],(21*scale + 12*i*scale,0))
+
             # --- UI de recharge du kayou ---
-            bar_x = 250
-            bar_y = 25
-            bar_w = 120
-            bar_h = 24
-            pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
+            bar_x = 200*scale
+            bar_y = 5*scale
+            bar_w = recharge_bar.width#120
+            bar_h = recharge_bar.height#24
+            #pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
             fill_ratio = kayou_cooldown / kayou_cooldown_max
-            pygame.draw.rect(screen, (80,180,255), (bar_x+2, bar_y+2, int((bar_w-4)*fill_ratio), bar_h-4), border_radius=6)
-            pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
+            pygame.draw.rect(screen, (80,180,255), (bar_x, bar_y, int((bar_w)*fill_ratio), bar_h), border_radius=0)
+            screen.blit(recharge_bar,(bar_x,bar_y))
+            #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x+110, bar_y-34))
             
         pygame.display.flip()

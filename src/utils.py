@@ -206,10 +206,10 @@ class entity_map:
         self.reload_map()
 
 class animation:
-    def __init__(self,frames:list,durations:list):
+    def __init__(self,frames:list,durations:list,one_shot = False):
         self.frames = frames
         self.durations = durations
-
+        self.one_shot = one_shot
 class animated_sprite:
     def __init__(self,anims:dict,sheet_path:str,pos:vector2,scale:float,tile_size,default_anim = None):
         self.pos = pos
@@ -226,6 +226,7 @@ class animated_sprite:
         self.current_frame = 0
         self.current_time = 0
         self.is_flipped = False
+        self.is_visible = True
     def change_anim(self,new_anim:str):
         self.current_anim = new_anim
         self.current_frame = 0
@@ -245,10 +246,13 @@ class animated_sprite:
                     self.current_frame+=1
                 else:
                     self.current_frame = 0
-        surf = pygame.Surface((self.tile_size*self.scale,self.tile_size*self.scale),pygame.SRCALPHA)
-        surf.blit(self.images[self.anims[self.current_anim].frames[self.current_frame]],(0,0))
-        surf = pygame.transform.flip(surf,self.is_flipped,False)
-        screen.blit(surf,(self.pos-camera_pos).to_tuple())
+                    if self.anims[self.current_anim].one_shot:
+                        self.is_visible = False
+        if self.is_visible:         
+            surf = pygame.Surface((self.tile_size*self.scale,self.tile_size*self.scale),pygame.SRCALPHA)
+            surf.blit(self.images[self.anims[self.current_anim].frames[self.current_frame]],(0,0))
+            surf = pygame.transform.flip(surf,self.is_flipped,False)
+            screen.blit(surf,(self.pos-camera_pos).to_tuple())
 
 class rotated_sprite:
     def __init__(self,img_path:str,pos:vector2,scale:float,rot:float,add_angle:float,dist:float,tile_size,is_visible=True):
