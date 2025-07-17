@@ -3,7 +3,7 @@ import pygame.freetype
 from src import utils
 from src import gen
 from src import player
-from src import enemy
+#from src import enemy
 from src import entity
 
 pygame.init()
@@ -63,7 +63,7 @@ trans = 0
 
 camera_pos = utils.vector2(0,0)
 
-enemy = enemy.Enemy(utils.vector2(256,256), scale,"res/img/little_guy.png",16)
+#enemy = enemy.Enemy(utils.vector2(256,256), scale,"res/img/little_guy.png",16)
 
 #Edit mode variable only for dev:
 edit_mode = False
@@ -288,12 +288,19 @@ while running:
         else:
             player.update(delta_time,camera_pos,collision_layers)
             kayou.update(player.pos,delta_time,collision_layers,camera_pos)
+            for e in current_entities:
+                e.update(camera_pos,player.pos)
+                if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
+                    e.health -= 5
+                    kayou.throw_timer = 500
+                    #e.damage(5)
             #kayou.face_mouse(camera_pos)
-            enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
+            #enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
             for i in range(len(current_entities)):
                 #if current_entities[i]
                 if current_entities[i].is_dead == True:
                     current_entities.pop(i)
+                    break
             #all_dead = entity.check_all_dead(current_entities)
             for i in doors:
                 
@@ -353,10 +360,15 @@ while running:
                     for j in range(len(c)):
                         for k in range(len(c[0])):
                             if c[j][k] =="0":
-                                current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),scale,"","res/img/little_guy.png"))
+                                #current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),scale,"","res/img/little_guy.png"))
+                                current_entities.append(entity.basic_enemy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
+                                                                                      scale,
+                                                                                      "",
+                                                                                      {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
+                                                                                      "res/img/basic_enemy.png",
+                                                                                      "idle"))
                     
                 if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
-                    print("yeah")
                     rooms_in_layout[i.room_index].been_explored = True
 
                 #if all_dead and (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
@@ -416,8 +428,8 @@ while running:
             player.draw(screen,camera_pos,delta_time)
             kayou.draw(screen,camera_pos)
             for i in current_entities:
-                i.draw(screen,camera_pos)
-            enemy.draw(screen,camera_pos)
+                i.draw(screen,camera_pos,delta_time)
+            #.draw(screen,camera_pos)
             for i in doors:
                 i.draw(screen,camera_pos)
                 #i.draw_rect(screen,camera_pos)

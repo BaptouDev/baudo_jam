@@ -294,7 +294,9 @@ class rotated_sprite:
         if self.is_thrown:
             self.dist+=self.velocity*dt
             self.throw_timer += dt
-            if self.throw_timer > self.max_throw_time or check_player_collision_list(self.hitbox,collision_layers,camera_pos):
+            if check_player_collision_list(self.hitbox,collision_layers,camera_pos):
+                self.throw_timer = 500
+            if self.throw_timer > self.max_throw_time:
                 if self.is_thrown: # Only spawn once
                     # Spawn stone particles at collision point
                     real_pos = self.pos + vector2(r_x,r_y)*self.dist
