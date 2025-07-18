@@ -274,12 +274,20 @@ while running:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
                 mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
                 direction = mouse_pos - kayou.pos
-                kayou.throw(direction, 800)
+                if player.powerups_has["fast_rock"]:
+                    kayou.throw(direction, 1600)
+                else:
+                    kayou.throw(direction, 800)
+
         elif state == CREDIT:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
                 if retour_rect.collidepoint(pygame.mouse.get_pos()):
                     state = MENU
+    if player.powerups_has["big_rock"]:
+        kayou.hitbox.width = 16*scale
+        kayou.hitbox.height = 16*scale
+        kayou.sprite = pygame.transform.scale_by(pygame.image.load("res/img/big_rock.png").convert_alpha(),scale)
 
     if state == MENU:
         for y in range(720):

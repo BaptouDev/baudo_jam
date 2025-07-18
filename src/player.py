@@ -45,7 +45,7 @@ class player:
         self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
         self.max_health = 6
         self.current_health = 5
-        self.powerups_has = {"health":False,"double_dash":False,"speedy_rock":False,"big_rock":False,"explosive_rock":False}
+        self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False,"explosive_rock":False}
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
