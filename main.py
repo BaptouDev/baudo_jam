@@ -171,6 +171,7 @@ current_entities = []
 MENU = 0
 GAME = 1
 CREDIT = 2
+PAUSE = 3
 state = MENU
 
 button_w, button_h = 400, 100
@@ -180,7 +181,8 @@ button_quit_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h
 
 bounce_rects = [pygame.Rect(0,0,16*18*scale,16*scale),pygame.Rect(0,9*16*scale,16*18*scale,16*scale),pygame.Rect(0,0,16*scale,10*16*scale),pygame.Rect(17*16*scale,0,16*scale,10*16*scale)]
 
-
+show_fps = True
+settings_menu = False
 
 while running:
     current_time = pygame.time.get_ticks()
@@ -211,6 +213,8 @@ while running:
                     state = CREDIT
         elif state == GAME:
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = PAUSE
                 if event.key == pygame.K_SPACE:
                     for i in current_pickups:
                         if i.interact_rect.colliderect(player.collision_box):
@@ -278,6 +282,10 @@ while running:
                 retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
                 if retour_rect.collidepoint(pygame.mouse.get_pos()):
                     state = MENU
+        elif state == PAUSE:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = GAME
 
     if state == MENU:
         for y in range(720):
@@ -301,7 +309,10 @@ while running:
             shadow_rect.y += 6
             pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
             pygame.draw.rect(screen, color, rect, border_radius=32)
-            font.render_to(screen, (rect.x+rect.width//2-70, rect.y+rect.height//2-24), text, (0,0,0))
+            text_rect = font.get_rect(text)
+            text_x = rect.x + (rect.width - text_rect.width) // 2
+            text_y = rect.y + (rect.height - text_rect.height) // 2
+            font.render_to(screen, (text_x, text_y), text, (0,0,0))
         draw_button(button_play_rect, "JOUER", (80,180,255), (120,220,255))
         draw_button(button_credit_rect, "CRÉDIT", (120,120,120), (180,180,180))
         draw_button(button_quit_rect, "QUITTER", (200,60,60), (255,100,100))
@@ -493,7 +504,8 @@ while running:
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
 
-        font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
+        if show_fps:
+            font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
         pygame.display.flip()
 
     elif state == CREDIT:
@@ -517,6 +529,69 @@ while running:
             small_font.render_to(screen, (1280//2 - rect.width//2, 250 + i*60), line, (220,220,220))
         retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
         draw_button(retour_rect, "RETOUR", (80,180,255), (120,220,255))
+        pygame.display.flip()
+        continue
+    elif state == PAUSE:
+        for y in range(720):
+            color = (
+                int(30 + (y/720)*60),
+                int(30 + (y/720)*90),
+                int(60 + (y/720)*120)
+            )
+            pygame.draw.line(screen, color, (0, y), (1280, y))
+        big_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 72)
+        title_rect = big_font.get_rect("Pause")
+        big_font.render_to(screen, (1280//2 - title_rect.width//2, 90), "Pause", (255,255,255))
+        pause_resume_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
+        pause_settings_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+        pause_menu_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
+        def draw_button(rect, text, base_color, hover_color):
+            mouse_pos = pygame.mouse.get_pos()
+            is_hover = rect.collidepoint(mouse_pos)
+            color = hover_color if is_hover else base_color
+            shadow_rect = rect.copy()
+            shadow_rect.x += 6
+            shadow_rect.y += 6
+            pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
+            pygame.draw.rect(screen, color, rect, border_radius=32)
+            text_rect = font.get_rect(text)
+            text_x = rect.x + (rect.width - text_rect.width) // 2
+            text_y = rect.y + (rect.height - text_rect.height) // 2
+            font.render_to(screen, (text_x, text_y), text, (0,0,0))
+        if not settings_menu:
+            draw_button(pause_resume_rect, "REPRENDRE", (80,180,255), (120,220,255))
+            draw_button(pause_settings_rect, "PARAMÈTRES", (120,120,120), (180,180,180))
+            draw_button(pause_menu_rect, "MENU PRINCIPAL", (200,60,60), (255,100,100))
+        else:
+            settings_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
+            draw_button(settings_rect, f"Afficher les FPS : {'OUI' if show_fps else 'NON'}", (80,180,255), (120,220,255))
+            retour_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+            draw_button(retour_rect, "RETOUR", (200,60,60), (255,100,100))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if not settings_menu:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if pause_resume_rect.collidepoint(mouse_pos):
+                        state = GAME
+                    if pause_menu_rect.collidepoint(mouse_pos):
+                        state = MENU
+                    if pause_settings_rect.collidepoint(mouse_pos):
+                        settings_menu = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        state = GAME
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if settings_rect.collidepoint(mouse_pos):
+                        show_fps = not show_fps
+                    if retour_rect.collidepoint(mouse_pos):
+                        settings_menu = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        settings_menu = False
         pygame.display.flip()
         continue
 
