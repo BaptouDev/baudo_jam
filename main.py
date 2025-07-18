@@ -171,16 +171,19 @@ current_entities = []
 MENU = 0
 GAME = 1
 CREDIT = 2
+PAUSE = 3
 state = MENU
 
-button_w, button_h = 400, 100
+button_w, button_h = 470, 100
 button_play_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
 button_credit_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
 button_quit_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
 
 bounce_rects = [pygame.Rect(0,0,16*18*scale,16*scale),pygame.Rect(0,9*16*scale,16*18*scale,16*scale),pygame.Rect(0,0,16*scale,10*16*scale),pygame.Rect(17*16*scale,0,16*scale,10*16*scale)]
 
-
+show_fps = True
+settings_menu = False
+show_minimap = False
 
 while running:
     current_time = pygame.time.get_ticks()
@@ -211,6 +214,8 @@ while running:
                     state = CREDIT
         elif state == GAME:
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = PAUSE
                 if event.key == pygame.K_SPACE:
                     for i in current_pickups:
                         i.update(camera_pos)
@@ -261,33 +266,38 @@ while running:
                         else:
                             current_selected_entity_index = len(entities)-1
         
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
-                if not edit_mode_adding_entities:
-                    rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
-                else:
-                    entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
-                if not edit_mode_adding_entities:
-                    rooms[current_room_index].change_tile(cursor_pos,-1)
-                else:
-                    entity_maps[current_room_index].change_tile(cursor_pos,-1)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
-                mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
-                direction = mouse_pos - kayou.pos
-                if player.powerups_has["fast_rock"]:
-                    kayou.throw(direction, 1600)
-                else:
-                    kayou.throw(direction, 800)
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
+                    if not edit_mode_adding_entities:
+                        rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+                    else:
+                        entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
+                    if not edit_mode_adding_entities:
+                        rooms[current_room_index].change_tile(cursor_pos,-1)
+                    else:
+                        entity_maps[current_room_index].change_tile(cursor_pos,-1)
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
+                    mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
+                    direction = mouse_pos - kayou.pos
+                    if player.powerups_has["fast_rock"]:
+                        kayou.throw(direction, 1600)
+                    else:
+                        kayou.throw(direction, 800)
+            if player.powerups_has["big_rock"]:
+                kayou.hitbox.width = 16*scale
+                kayou.hitbox.height = 16*scale
+                kayou.sprite = pygame.transform.scale_by(pygame.image.load("res/img/big_rock.png").convert_alpha(),scale)
 
         elif state == CREDIT:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
                 if retour_rect.collidepoint(pygame.mouse.get_pos()):
                     state = MENU
-    if player.powerups_has["big_rock"]:
-        kayou.hitbox.width = 16*scale
-        kayou.hitbox.height = 16*scale
-        kayou.sprite = pygame.transform.scale_by(pygame.image.load("res/img/big_rock.png").convert_alpha(),scale)
+    
+        elif state == PAUSE:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = GAME
 
     if state == MENU:
         for y in range(720):
@@ -311,7 +321,10 @@ while running:
             shadow_rect.y += 6
             pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
             pygame.draw.rect(screen, color, rect, border_radius=32)
-            font.render_to(screen, (rect.x+rect.width//2-70, rect.y+rect.height//2-24), text, (0,0,0))
+            text_rect = font.get_rect(text)
+            text_x = rect.x + (rect.width - text_rect.width) // 2
+            text_y = rect.y + (rect.height - text_rect.height) // 2
+            font.render_to(screen, (text_x, text_y), text, (0,0,0))
         draw_button(button_play_rect, "JOUER", (80,180,255), (120,220,255))
         draw_button(button_credit_rect, "CRÉDIT", (120,120,120), (180,180,180))
         draw_button(button_quit_rect, "QUITTER", (200,60,60), (255,100,100))
@@ -340,9 +353,8 @@ while running:
             for e in current_entities:
                 e.update(camera_pos,player.pos)
                 if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
-                    e.health -= 5
+                    e.damage(1)
                     kayou.throw_timer = 500
-                    #e.damage(5)
             #kayou.face_mouse(camera_pos)
             #enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
             for i in range(len(current_entities)):
@@ -495,8 +507,8 @@ while running:
             # --- UI de recharge du kayou ---
             bar_x = 200*scale
             bar_y = 5*scale
-            bar_w = recharge_bar.width#120
-            bar_h = recharge_bar.height#24
+            bar_w = recharge_bar.get_width()
+            bar_h = recharge_bar.get_height()
             #pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
             fill_ratio = kayou_cooldown / kayou_cooldown_max
             pygame.draw.rect(screen, (80,180,255), (bar_x, bar_y, int((bar_w)*fill_ratio), bar_h), border_radius=0)
@@ -504,7 +516,31 @@ while running:
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
 
-        font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
+            if show_minimap:
+                # --- Mini-map ---
+                minimap_w = 200
+                minimap_h = 120
+                minimap_x = 1270 - minimap_w - 20
+                minimap_y = 720 - minimap_h - 20
+                map_rows = len(layout)
+                map_cols = len(layout[0])
+                cell_w = minimap_w // map_cols
+                cell_h = minimap_h // map_rows
+                pygame.draw.rect(screen, (30,30,30), (minimap_x-4, minimap_y-4, minimap_w+8, minimap_h+8), border_radius=10)
+                pygame.draw.rect(screen, (60,60,60), (minimap_x, minimap_y, minimap_w, minimap_h), border_radius=8)
+                for i in range(map_rows):
+                    for j in range(map_cols):
+                        if layout[i][j] != -1:
+                            color = (80,80,80)
+                            for r in rooms_in_layout:
+                                if hasattr(r, 'been_explored') and r.been_explored and r.pos == utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10):
+                                    color = (180,180,180)
+                            if (j,i) == current_room_pos:
+                                color = (80,180,255)
+                            pygame.draw.rect(screen, color, (minimap_x + j*cell_w + 2, minimap_y + i*cell_h + 2, cell_w-4, cell_h-4), border_radius=3)
+
+        if show_fps:
+            font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
         pygame.display.flip()
 
     elif state == CREDIT:
@@ -528,6 +564,73 @@ while running:
             small_font.render_to(screen, (1280//2 - rect.width//2, 250 + i*60), line, (220,220,220))
         retour_rect = pygame.Rect((1280//2 - button_w//2, 600), (button_w, button_h))
         draw_button(retour_rect, "RETOUR", (80,180,255), (120,220,255))
+        pygame.display.flip()
+        continue
+    elif state == PAUSE:
+        for y in range(720):
+            color = (
+                int(30 + (y/720)*60),
+                int(30 + (y/720)*90),
+                int(60 + (y/720)*120)
+            )
+            pygame.draw.line(screen, color, (0, y), (1280, y))
+        big_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 72)
+        title_rect = big_font.get_rect("Pause")
+        big_font.render_to(screen, (1280//2 - title_rect.width//2, 90), "Pause", (255,255,255))
+        pause_resume_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
+        pause_settings_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+        pause_menu_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
+        def draw_button(rect, text, base_color, hover_color):
+            mouse_pos = pygame.mouse.get_pos()
+            is_hover = rect.collidepoint(mouse_pos)
+            color = hover_color if is_hover else base_color
+            shadow_rect = rect.copy()
+            shadow_rect.x += 6
+            shadow_rect.y += 6
+            pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
+            pygame.draw.rect(screen, color, rect, border_radius=32)
+            text_rect = font.get_rect(text)
+            text_x = rect.x + (rect.width - text_rect.width) // 2
+            text_y = rect.y + (rect.height - text_rect.height) // 2
+            font.render_to(screen, (text_x, text_y), text, (0,0,0))
+        if not settings_menu:
+            draw_button(pause_resume_rect, "REPRENDRE", (80,180,255), (120,220,255))
+            draw_button(pause_settings_rect, "PARAMÈTRES", (120,120,120), (180,180,180))
+            draw_button(pause_menu_rect, "MENU PRINCIPAL", (200,60,60), (255,100,100))
+        else:
+            settings_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
+            draw_button(settings_rect, f"Afficher les FPS : {'OUI' if show_fps else 'NON'}", (80,180,255), (120,220,255))
+            minimap_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+            draw_button(minimap_rect, f"Afficher la mini-map : {'OUI' if show_minimap else 'NON'}", (80,180,255), (120,220,255))
+            retour_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
+            draw_button(retour_rect, "RETOUR", (200,60,60), (255,100,100))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if not settings_menu:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if pause_resume_rect.collidepoint(mouse_pos):
+                        state = GAME
+                    if pause_menu_rect.collidepoint(mouse_pos):
+                        state = MENU
+                    if pause_settings_rect.collidepoint(mouse_pos):
+                        settings_menu = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        state = GAME
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if settings_rect.collidepoint(mouse_pos):
+                        show_fps = not show_fps
+                    if minimap_rect.collidepoint(mouse_pos):
+                        show_minimap = not show_minimap
+                    if retour_rect.collidepoint(mouse_pos):
+                        settings_menu = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        settings_menu = False
         pygame.display.flip()
         continue
 

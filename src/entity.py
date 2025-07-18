@@ -15,7 +15,6 @@ class entity:
 
 class static_sprite_entity(entity):
     def __init__(self,pos:utils.vector2,scale:float,name:str,sprite_path:str,is_visible=True):
-        #super().__init__(pos, scale,name, is_visible)
         self.pos = pos
         self.scale=scale
         self.name = name
@@ -46,16 +45,27 @@ class animated_sprite_entity(entity):
 class basic_enemy(animated_sprite_entity):
     def __init__(self, pos, scale, name, anims, sprite_path, default_anim, is_visible=True):
         super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
-        self.damage = 1
-        self.health = 5
-    def damage(self,hurt):
+        self.damage_value = 1
+        self.max_health = 2
+        self.health = self.max_health
+    def damage(self, hurt):
         self.health -= hurt
-    def update(self,camera_pos:utils.vector2,player_pos:utils.vector2):
+        if self.health < 0:
+            self.health = 0
+    def update(self, camera_pos:utils.vector2, player_pos:utils.vector2):
         if self.health <= 0:
             self.is_dead = True
         super().update(camera_pos)
     def draw(self, screen, camera_pos, dt):
         super().draw(screen, camera_pos, dt)
+        if not self.is_dead:
+            bar_width = 24 * self.scale
+            bar_height = 2 * self.scale
+            x = self.pos.x - camera_pos.x + 8 * self.scale - bar_width // 2
+            y = self.pos.y - camera_pos.y - 10 * self.scale
+            ratio = self.health / self.max_health
+            pygame.draw.rect(screen, (60, 0, 0), (x, y, bar_width, bar_height))
+            pygame.draw.rect(screen, (255, 0, 0), (x, y, bar_width * ratio, bar_height))
     def draw_display(self, screen, pos):
         super().draw_display(screen, pos)
 
