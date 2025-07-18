@@ -168,6 +168,7 @@ kayou_cooldown = kayou.max_throw_time
 kayou_cooldown_max = kayou.max_throw_time
 
 current_entities = []
+projectiles = []
 MENU = 0
 GAME = 1
 CREDIT = 2
@@ -266,23 +267,23 @@ while running:
                         else:
                             current_selected_entity_index = len(entities)-1
         
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
-                    if not edit_mode_adding_entities:
-                        rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
-                    else:
-                        entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
-                    if not edit_mode_adding_entities:
-                        rooms[current_room_index].change_tile(cursor_pos,-1)
-                    else:
-                        entity_maps[current_room_index].change_tile(cursor_pos,-1)
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
-                    mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
-                    direction = mouse_pos - kayou.pos
-                    if player.powerups_has["fast_rock"]:
-                        kayou.throw(direction, 1600)
-                    else:
-                        kayou.throw(direction, 800)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not cursor_pos == None and edit_mode:
+                if not edit_mode_adding_entities:
+                    rooms[current_room_index].change_tile(cursor_pos,current_selected_tile_index)
+                else:
+                    entity_maps[current_room_index].change_tile(cursor_pos,current_selected_entity_index)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and not cursor_pos == None and edit_mode:
+                if not edit_mode_adding_entities:
+                    rooms[current_room_index].change_tile(cursor_pos,-1)
+                else:
+                    entity_maps[current_room_index].change_tile(cursor_pos,-1)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not edit_mode and not kayou.is_thrown:
+                mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
+                direction = mouse_pos - kayou.pos
+                if player.powerups_has["fast_rock"]:
+                    kayou.throw(direction, 1600)
+                else:
+                    kayou.throw(direction, 800)
             if player.powerups_has["big_rock"]:
                 kayou.hitbox.width = 16*scale
                 kayou.hitbox.height = 16*scale
@@ -351,10 +352,19 @@ while running:
             player.update(delta_time,camera_pos,collision_layers)
             kayou.update(player.pos,delta_time,collision_layers,camera_pos)
             for e in current_entities:
-                e.update(camera_pos,player.pos)
+                e.update(camera_pos,player,delta_time,projectiles)
                 if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
-                    e.damage(1)
+                    if player.powerups_has["big_rock"]:
+                        e.damage(2)
+                    else:
+                        e.damage(1)
                     kayou.throw_timer = 500
+            for p in range(len(projectiles)):
+                projectiles[p].update(camera_pos,delta_time)
+                if projectiles[p].hitrect.colliderect(player.collision_box):
+                    player.damage(projectiles[p].damage)
+                    projectiles.pop(p)
+                    break
             #kayou.face_mouse(camera_pos)
             #enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
             for i in range(len(current_entities)):
@@ -417,20 +427,22 @@ while running:
                     #c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
                     c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
                     #print(c)
-                    #if rooms_in_layout[i.room_index].been_explored == False:
+                    #if rooms_in_layout[room_in_index].been_explored == False:
                     for j in range(len(c)):
                         for k in range(len(c[0])):
                             if c[j][k] =="0":
                                 #current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),scale,"","res/img/little_guy.png"))
-                                current_entities.append(entity.basic_enemy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
+                                current_entities.append(entity.litte_guy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
                                                                                       scale,
                                                                                       "",
                                                                                       {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
                                                                                       "res/img/basic_enemy.png",
                                                                                       "idle"))
                     
-                if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
-                    rooms_in_layout[i.room_index].been_explored = True
+                if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos and len(current_entities)!=0:
+                    #rooms_in_layout[i.room_index].been_explored = True
+                    room_in_index = i.room_index
+                    rooms_in_layout[room_in_index].been_explored= True
 
                 #if all_dead and (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos:
                 #        i.is_open = True
@@ -492,6 +504,8 @@ while running:
             kayou.draw(screen,camera_pos)
             for i in current_entities:
                 i.draw(screen,camera_pos,delta_time)
+            for i in projectiles:
+                i.draw(screen,camera_pos)
             #.draw(screen,camera_pos)
             for i in doors:
                 i.draw(screen,camera_pos)

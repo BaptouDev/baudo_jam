@@ -227,6 +227,10 @@ class animated_sprite:
         self.current_time = 0
         self.is_flipped = False
         self.is_visible = True
+        self.is_blinking = False
+        self.null_alpha = False
+        self.blink_timer = 0
+        self.blink_time = .15
     def change_anim(self,new_anim:str):
         self.current_anim = new_anim
         self.current_frame = 0
@@ -234,6 +238,13 @@ class animated_sprite:
     def update_pos(self,new_pos):
         self.pos = new_pos
     def draw(self,screen:pygame.Surface,delta_time:float,camera_pos:vector2):
+        self.blink_timer -= delta_time
+        if self.is_blinking:
+            if self.blink_timer <=0:
+                self.null_alpha = not self.null_alpha
+                self.blink_timer = self.blink_time
+        else:
+            self.null_alpha = False
         if len(self.anims[self.current_anim].frames) ==0:
             pass
         else:
@@ -250,6 +261,8 @@ class animated_sprite:
                         self.is_visible = False
         if self.is_visible:         
             surf = pygame.Surface((self.tile_size*self.scale,self.tile_size*self.scale),pygame.SRCALPHA)
+            if self.null_alpha:
+                surf.set_alpha(0)
             surf.blit(self.images[self.anims[self.current_anim].frames[self.current_frame]],(0,0))
             surf = pygame.transform.flip(surf,self.is_flipped,False)
             screen.blit(surf,(self.pos-camera_pos).to_tuple())
@@ -356,3 +369,21 @@ class powerup_pickup:
         self.interact_rect.top = self.pos.y - camera_pos.y
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
         screen.blit(self.image,(self.pos-camera_pos).to_tuple())
+
+class projectile:
+    def __init__(self,speed:float,pos:vector2,scale:float,damage:int,offset:vector2,size:vector2,launch_angle:float,sprite_path:str):
+        self.speed = speed
+        self.pos = pos
+        self.scale = scale
+        self.damage = damage
+        self.offset = offset
+        self.size = size
+        self.hitrect = pygame.Rect(pos.x+offset.x,pos.y+offset.y,size.x,size.y)
+        self.launch_angle = launch_angle
+        self.vel = vector2(math.cos(self.launch_angle),math.sin(self.launch_angle))*self.speed
+        self.sprite = pygame.transform.scale_by(pygame.image.load(sprite_path).convert_alpha(),self.scale)
+    def update(self,camera_pos:vector2,dt:float):
+        self.pos += self.vel*dt
+        self.hitrect = pygame.Rect(self.pos.x+self.offset.x-camera_pos.x,self.pos.y+self.offset.y-camera_pos.y,self.size.x,self.size.y)
+    def draw(self,screen:pygame.Surface,camera_pos:vector2):
+        screen.blit(self.sprite,(self.pos-camera_pos).to_tuple())

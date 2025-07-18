@@ -1,5 +1,7 @@
 import pygame
+import math
 from . import utils
+from . import player
 
 class entity:
     def __init__(self,pos:utils.vector2,scale:float,name:str,is_visible = True):
@@ -52,7 +54,7 @@ class basic_enemy(animated_sprite_entity):
         self.health -= hurt
         if self.health < 0:
             self.health = 0
-    def update(self, camera_pos:utils.vector2, player_pos:utils.vector2):
+    def update(self, camera_pos:utils.vector2, player:player.player,dt:float,projectiles:list):
         if self.health <= 0:
             self.is_dead = True
         super().update(camera_pos)
@@ -72,8 +74,22 @@ class basic_enemy(animated_sprite_entity):
 class litte_guy(basic_enemy):
     def __init__(self, pos, scale, name, anims, sprite_path, default_anim, is_visible=True):
         super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
-    def update(self, camera_pos,player_pos:utils.vector2):
-        super().update(camera_pos)
+        self.launch_projectile_time = 3
+        self.launch_projectile_timer = 3
+        self.wait_init_timer = 1
+        self.speed = 100
+    def update(self, camera_pos,player:player.player,dt:float,projectiles:list):
+        self.launch_projectile_timer-=dt
+        self.wait_init_timer-=dt
+        if self.wait_init_timer <=0:
+            target_pos = player.pos - self.pos
+            self.pos+= target_pos.normalize()*self.speed*dt
+        if self.launch_projectile_timer <=0:
+            self.launch_projectile_timer = self.launch_projectile_time
+            target_pos = player.pos - self.pos + utils.vector2(8,8)*self.scale
+            launch_angle = math.atan2(target_pos.y,target_pos.x)#*180/math.pi
+            projectiles.append(utils.projectile(300,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle,"res/img/little_rock.png"))
+        super().update(camera_pos,player,dt,projectiles)
     def draw(self, screen, camera_pos, dt):
         return super().draw(screen, camera_pos, dt)
     def draw_display(self, screen, pos):

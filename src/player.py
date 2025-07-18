@@ -31,7 +31,7 @@ class player:
         self.dash_speed = 1500
         self.dash_duration = .10
         self.dashing_timer = 0
-        self.dash_cooldown = 1.5
+        self.dash_cooldown = .75
         self.dash_time = 0
         self.fadeout_sprites = []
         self.nb_fadeout_sprites = 5
@@ -44,12 +44,15 @@ class player:
         self.grass_particle_image = pygame.image.load('res/img/grass.png').convert_alpha()
         self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
         self.max_health = 6
-        self.current_health = 5
+        self.current_health = 6
         self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False,"explosive_rock":False}
+        self.invis_time = 1
+        self.invis_timer = 0
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
         self.sprite_creation_timer -= dt
+        self.invis_timer-=dt
         input_vect = utils.vector2(0,0)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
@@ -110,6 +113,10 @@ class player:
             self.sprite.change_anim("run")
         if self.sprite.current_anim == "run" and self.vel.magnitude_sq() == 0:
             self.sprite.change_anim("idle")
+        if self.invis_timer >= 0:
+            self.sprite.is_blinking = True
+        else:
+            self.sprite.is_blinking = False
         #self.temp_fadeout_sprite.update_pos(self.pos + utils.vector2(64,64))
         self.last_pos = self.pos
     def pickup_powerup(self,powerup_name:str):
@@ -120,6 +127,12 @@ class player:
         if powerup_name == "double_dash":
             self.dash_speed = 2000
             self.dash_duration = .15
+    def damage(self,damage):
+        if self.invis_timer <0:
+            self.current_health-=damage
+            if self.current_health<0:
+                self.current_health=0
+            self.invis_timer = self.invis_time
     def draw(self,screen,camera_pos,dt):
         self.sprite.update_pos(self.pos)
         for i in self.fadeout_sprites:
