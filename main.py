@@ -174,7 +174,7 @@ CREDIT = 2
 PAUSE = 3
 state = MENU
 
-button_w, button_h = 400, 100
+button_w, button_h = 470, 100
 button_play_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
 button_credit_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
 button_quit_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
@@ -183,6 +183,7 @@ bounce_rects = [pygame.Rect(0,0,16*18*scale,16*scale),pygame.Rect(0,9*16*scale,1
 
 show_fps = True
 settings_menu = False
+show_minimap = False
 
 while running:
     current_time = pygame.time.get_ticks()
@@ -504,6 +505,29 @@ while running:
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
 
+            if show_minimap:
+                # --- Mini-map ---
+                minimap_w = 200
+                minimap_h = 120
+                minimap_x = 1270 - minimap_w - 20
+                minimap_y = 720 - minimap_h - 20
+                map_rows = len(layout)
+                map_cols = len(layout[0])
+                cell_w = minimap_w // map_cols
+                cell_h = minimap_h // map_rows
+                pygame.draw.rect(screen, (30,30,30), (minimap_x-4, minimap_y-4, minimap_w+8, minimap_h+8), border_radius=10)
+                pygame.draw.rect(screen, (60,60,60), (minimap_x, minimap_y, minimap_w, minimap_h), border_radius=8)
+                for i in range(map_rows):
+                    for j in range(map_cols):
+                        if layout[i][j] != -1:
+                            color = (80,80,80)
+                            for r in rooms_in_layout:
+                                if hasattr(r, 'been_explored') and r.been_explored and r.pos == utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10):
+                                    color = (180,180,180)
+                            if (j,i) == current_room_pos:
+                                color = (80,180,255)
+                            pygame.draw.rect(screen, color, (minimap_x + j*cell_w + 2, minimap_y + i*cell_h + 2, cell_w-4, cell_h-4), border_radius=3)
+
         if show_fps:
             font.render_to(screen, (10, 10), f"{1/delta_time:.1f}", (255,255,0))
         pygame.display.flip()
@@ -565,7 +589,9 @@ while running:
         else:
             settings_rect = pygame.Rect((1280//2 - button_w//2, 300), (button_w, button_h))
             draw_button(settings_rect, f"Afficher les FPS : {'OUI' if show_fps else 'NON'}", (80,180,255), (120,220,255))
-            retour_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+            minimap_rect = pygame.Rect((1280//2 - button_w//2, 430), (button_w, button_h))
+            draw_button(minimap_rect, f"Afficher la mini-map : {'OUI' if show_minimap else 'NON'}", (80,180,255), (120,220,255))
+            retour_rect = pygame.Rect((1280//2 - button_w//2, 560), (button_w, button_h))
             draw_button(retour_rect, "RETOUR", (200,60,60), (255,100,100))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -587,6 +613,8 @@ while running:
                     mouse_pos = pygame.mouse.get_pos()
                     if settings_rect.collidepoint(mouse_pos):
                         show_fps = not show_fps
+                    if minimap_rect.collidepoint(mouse_pos):
+                        show_minimap = not show_minimap
                     if retour_rect.collidepoint(mouse_pos):
                         settings_menu = False
                 if event.type == pygame.KEYDOWN:
