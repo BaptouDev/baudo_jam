@@ -330,9 +330,8 @@ while running:
             for e in current_entities:
                 e.update(camera_pos,player.pos)
                 if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
-                    e.health -= 5
+                    e.damage(1)
                     kayou.throw_timer = 500
-                    #e.damage(5)
             #kayou.face_mouse(camera_pos)
             #enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
             for i in range(len(current_entities)):
@@ -485,8 +484,8 @@ while running:
             # --- UI de recharge du kayou ---
             bar_x = 200*scale
             bar_y = 5*scale
-            bar_w = recharge_bar.width#120
-            bar_h = recharge_bar.height#24
+            bar_w = recharge_bar.get_width()
+            bar_h = recharge_bar.get_height()
             #pygame.draw.rect(screen, (60,60,60), (bar_x, bar_y, bar_w, bar_h), border_radius=8)
             fill_ratio = kayou_cooldown / kayou_cooldown_max
             pygame.draw.rect(screen, (80,180,255), (bar_x, bar_y, int((bar_w)*fill_ratio), bar_h), border_radius=0)
