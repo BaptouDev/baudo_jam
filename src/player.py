@@ -49,6 +49,7 @@ class player:
         self.invis_time = 1
         self.invis_timer = 0
         self.is_dashing = False
+        self.is_dead = False
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
@@ -136,7 +137,11 @@ class player:
             self.current_health-=damage
             if self.current_health<0:
                 self.current_health=0
+            if self.current_health==0:
+                self.is_dead = True
             self.invis_timer = self.invis_time
+    def is_alive(self):
+        return not self.is_dead
     def draw(self,screen,camera_pos,dt):
         self.sprite.update_pos(self.pos)
         for i in self.fadeout_sprites:

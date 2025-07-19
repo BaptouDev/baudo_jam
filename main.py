@@ -7,6 +7,8 @@ from src import gen
 from src import player
 #from src import enemy
 from src import entity
+import os
+import sys
 
 pygame.init()
 screen = pygame.display.set_mode((1270,720))
@@ -26,7 +28,8 @@ values = [utils.weighted_value(0,1),
           utils.weighted_value(6,1),
           utils.weighted_value(7,1),
           utils.weighted_value(8,1)]
-room_names = ["test","shop","start","room1","room2","room3","room4","room5","room6","room7"]
+room_names = ["shop","start","room2","room3","room4","room5","room6","room7"]
+
 rooms = []
 entities = [entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_guy.png"),
             entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png")]
@@ -178,6 +181,7 @@ MENU = 0
 GAME = 1
 CREDIT = 2
 PAUSE = 3
+GAME_OVER = 4
 state = MENU
 
 button_w, button_h = 470, 100
@@ -355,6 +359,8 @@ while running:
             cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
         else:
             player.update(delta_time,camera_pos,collision_layers)
+            if player.is_dead:
+                state = GAME_OVER
             kayou.update(player.pos,delta_time,collision_layers,camera_pos,player.powerups_has["explosive_rock"])
             for e in current_entities:
                 e.update(camera_pos,player,delta_time,projectiles,collision_layers)
@@ -377,6 +383,9 @@ while running:
                 if current_entities[i].is_dead == True:
                     current_entities.pop(i)
                     break
+            # Marquer la salle comme cleared si plus d'ennemis
+            if len(current_entities) == 0 and state == GAME:
+                been_explored_dict[(current_room_pos, 'cleared')] = True
             #all_dead = entity.check_all_dead(current_entities)
             for i in doors:
                 
@@ -433,7 +442,12 @@ while running:
                     c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
                     #print(c)
                     #if rooms_in_layout[room_in_index].been_explored == False:
+                    # Empêcher le respawn si la salle est cleared
+                    if been_explored_dict.get((current_room_pos, 'cleared'), False):
+                        been_explored_dict[current_room_pos]=True
+                        continue
                     if been_explored_dict[current_room_pos]==False:
+                        has_enemy = False
                         for j in range(len(c)):
                             for k in range(len(c[0])):
                                 if c[j][k] =="0":
@@ -444,6 +458,21 @@ while running:
                                                                                       {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
                                                                                       "res/img/basic_enemy.png",
                                                                                       "idle"))
+                    # Si pas d'ennemi et ce n'est pas la première salle visitée, on en ajoute un dans chaque coin
+                    if not has_enemy and been_explored_dict != {} and current_room_pos != list(been_explored_dict.keys())[0]:
+                        positions = [
+                            (current_room_pos[0]*16*scale*18+2*16*scale, current_room_pos[1]*16*scale*10+2*16*scale),
+                            (current_room_pos[0]*16*scale*18+16*scale*17-1*16*scale+1*16*scale, current_room_pos[1]*16*scale*10+2*16*scale),
+                            (current_room_pos[0]*16*scale*18+2*16*scale, current_room_pos[1]*16*scale*10+16*scale*9-1*16*scale+1*16*scale),
+                            (current_room_pos[0]*16*scale*18+16*scale*17-1*16*scale+1*16*scale, current_room_pos[1]*16*scale*10+16*scale*9-1*16*scale+1*16*scale)
+                        ]
+                        for pos in positions:
+                            current_entities.append(entity.litte_guy(utils.vector2(pos[0], pos[1]),
+                                                                      scale,
+                                                                      "",
+                                                                      {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
+                                                                      "res/img/basic_enemy.png",
+                                                                      "idle"))
                     been_explored_dict[current_room_pos]=True
                     
                 if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos and len(current_entities)!=0:
@@ -653,5 +682,51 @@ while running:
                     if event.key == pygame.K_ESCAPE:
                         settings_menu = False
         pygame.display.flip()
+        continue
+    elif state == GAME_OVER:
+        for y in range(720):
+            color = (
+                int(30 + (y/720)*60),
+                int(30 + (y/720)*90),
+                int(60 + (y/720)*120)
+            )
+            pygame.draw.line(screen, color, (0, y), (1280, y))
+        big_font = pygame.freetype.Font("res/fonts/Jersey15-Regular.ttf", 96)
+        title_rect = big_font.get_rect("GAME OVER")
+        big_font.render_to(screen, (1280//2 - title_rect.width//2, 120), "GAME OVER", (255,60,60))
+        retry_rect = pygame.Rect((1280//2 - button_w//2, 320), (button_w, button_h))
+        quit_rect = pygame.Rect((1280//2 - button_w//2, 470), (button_w, button_h))
+        def draw_button(rect, text, base_color, hover_color):
+            mouse_pos = pygame.mouse.get_pos()
+            is_hover = rect.collidepoint(mouse_pos)
+            color = hover_color if is_hover else base_color
+            shadow_rect = rect.copy()
+            shadow_rect.x += 6
+            shadow_rect.y += 6
+            pygame.draw.rect(screen, (0,0,0,80), shadow_rect, border_radius=32)
+            pygame.draw.rect(screen, color, rect, border_radius=32)
+            text_rect = font.get_rect(text)
+            text_x = rect.x + (rect.width - text_rect.width) // 2
+            text_y = rect.y + (rect.height - text_rect.height) // 2
+            font.render_to(screen, (text_x, text_y), text, (0,0,0))
+        draw_button(retry_rect, "REVENIR AU MENU", (80,180,255), (120,220,255))
+        draw_button(quit_rect, "QUITTER", (200,60,60), (255,100,100))
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                if event.key == pygame.K_SPACE:
+                    import os
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                if retry_rect.collidepoint(mouse_pos):
+                    import os
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+                if quit_rect.collidepoint(mouse_pos):
+                    running = False
         continue
 
