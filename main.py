@@ -28,7 +28,8 @@ values = [utils.weighted_value(0,1),
           utils.weighted_value(6,1),
           utils.weighted_value(7,1),
           utils.weighted_value(8,1)]
-room_names = ["test","shop","start","room1","room2","room3","room4","room5","room6","room7"]
+room_names = ["shop","start","room2","room3","room4","room5","room6","room7"]
+
 rooms = []
 entities = [entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_guy.png"),
             entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png")]
@@ -382,6 +383,9 @@ while running:
                 if current_entities[i].is_dead == True:
                     current_entities.pop(i)
                     break
+            # Marquer la salle comme cleared si plus d'ennemis
+            if len(current_entities) == 0 and state == GAME:
+                been_explored_dict[(current_room_pos, 'cleared')] = True
             #all_dead = entity.check_all_dead(current_entities)
             for i in doors:
                 
@@ -438,7 +442,12 @@ while running:
                     c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
                     #print(c)
                     #if rooms_in_layout[room_in_index].been_explored == False:
+                    # Empêcher le respawn si la salle est cleared
+                    if been_explored_dict.get((current_room_pos, 'cleared'), False):
+                        been_explored_dict[current_room_pos]=True
+                        continue
                     if been_explored_dict[current_room_pos]==False:
+                        has_enemy = False
                         for j in range(len(c)):
                             for k in range(len(c[0])):
                                 if c[j][k] =="0":
@@ -449,6 +458,21 @@ while running:
                                                                                       {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
                                                                                       "res/img/basic_enemy.png",
                                                                                       "idle"))
+                    # Si pas d'ennemi et ce n'est pas la première salle visitée, on en ajoute un dans chaque coin
+                    if not has_enemy and been_explored_dict != {} and current_room_pos != list(been_explored_dict.keys())[0]:
+                        positions = [
+                            (current_room_pos[0]*16*scale*18+2*16*scale, current_room_pos[1]*16*scale*10+2*16*scale),
+                            (current_room_pos[0]*16*scale*18+16*scale*17-1*16*scale+1*16*scale, current_room_pos[1]*16*scale*10+2*16*scale),
+                            (current_room_pos[0]*16*scale*18+2*16*scale, current_room_pos[1]*16*scale*10+16*scale*9-1*16*scale+1*16*scale),
+                            (current_room_pos[0]*16*scale*18+16*scale*17-1*16*scale+1*16*scale, current_room_pos[1]*16*scale*10+16*scale*9-1*16*scale+1*16*scale)
+                        ]
+                        for pos in positions:
+                            current_entities.append(entity.litte_guy(utils.vector2(pos[0], pos[1]),
+                                                                      scale,
+                                                                      "",
+                                                                      {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
+                                                                      "res/img/basic_enemy.png",
+                                                                      "idle"))
                     been_explored_dict[current_room_pos]=True
                     
                 if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos and len(current_entities)!=0:
