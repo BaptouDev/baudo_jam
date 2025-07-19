@@ -29,9 +29,9 @@ class player:
         self.last_pos = self.pos
         self.offset = utils.vector2(12,4)
         self.dash_speed = 1500
-        self.dash_duration = .10
+        self.dash_duration = .12
         self.dashing_timer = 0
-        self.dash_cooldown = .75
+        self.dash_cooldown = .6
         self.dash_time = 0
         self.fadeout_sprites = []
         self.nb_fadeout_sprites = 5
@@ -46,7 +46,7 @@ class player:
         self.max_health = 6
         self.current_health = 6
         self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False,"explosive_rock":False}
-        self.invis_time = 1
+        self.invis_time = 1.5
         self.invis_timer = 0
         self.is_dashing = False
         self.is_dead = False

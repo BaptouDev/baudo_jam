@@ -31,7 +31,8 @@ values = [utils.weighted_value(0,1),
 room_names = ["test","shop","start","room1","room2","room3","room4","room5","room6","room7"]
 rooms = []
 entities = [entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_guy.png"),
-            entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png")]
+            entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png"),
+            entity.angry_guy(utils.vector2(0,0),scale,"",{"idle":utils.animation([0],[0.1])},"res/img/angry_guy.png",None)]
 entity_maps=[]
 for i in room_names:
     rooms.append(gen.room("res/rooms/"+i+".csv","res/img/sheet.png","res/img/collide_sheet.png",16,utils.vector2(64,64),4,values,{}))
@@ -60,7 +61,7 @@ powerup_images = utils.sheet_to_list(pygame.image.load("res/img/powerup.png"),16
 
 powerups = [utils.powerup_pickup("health","2 Coeurs en plus",powerup_images[0],scale),
             utils.powerup_pickup("double_dash","Un dash plus rapide",powerup_images[1],scale),
-            utils.powerup_pickup("fast_rock","Kayou plus rapide",powerup_images[3],scale),
+            utils.powerup_pickup("fast_rock","Kayou plus rapide et va plus loin",powerup_images[3],scale),
             utils.powerup_pickup("big_rock","Gros Kayou",powerup_images[4],scale),
             utils.powerup_pickup("exploding_rock","Kayou explosif",powerup_images[6],scale)]
 current_pickups = []
@@ -321,7 +322,10 @@ while running:
                 mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
                 direction = mouse_pos - kayou.pos
                 if player.powerups_has["fast_rock"]:
-                    kayou.throw(direction, 1600)
+                    kayou.throw(direction, 1200)
+                    kayou.max_throw_time = 1
+                    kayou_cooldown_max = kayou.max_throw_time
+
                 else:
                     kayou.throw(direction, 800)
             if player.powerups_has["big_rock"]:
@@ -407,12 +411,16 @@ while running:
                     else:
                         e.damage(1)
                     kayou.throw_timer = 500
+            pop_it = -1
             for p in range(len(projectiles)):
                 projectiles[p].update(camera_pos,delta_time)
+                if not((current_room_pos[0]*16*scale*18+16*scale <=projectiles[p].pos.x<=(current_room_pos[0]+1)*16*scale*18-16*scale) and (current_room_pos[1]*16*scale*10+16*scale <=projectiles[p].pos.y<=(current_room_pos[1]+1)*16*scale*10-16*scale)):#utils.check_player_collision_list(projectiles[p].hitrect,collision_layers,camera_pos):
+                    pop_it = p
                 if projectiles[p].hitrect.colliderect(player.collision_box):
                     player.damage(projectiles[p].damage)
-                    projectiles.pop(p)
-                    break
+                    pop_it = p
+            if pop_it !=-1:
+                projectiles.pop(pop_it)
             #kayou.face_mouse(camera_pos)
             #enemy.update(delta_time, rooms_in_layout[room_in_index].main_layer, player.pos)
             for i in range(len(current_entities)):
@@ -488,6 +496,13 @@ while running:
                                                                                       "",
                                                                                       {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
                                                                                       "res/img/basic_enemy.png",
+                                                                                      "idle"))
+                                if c[j][k] == "2":
+                                    current_entities.append(entity.angry_guy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
+                                                                                      scale,
+                                                                                      "",
+                                                                                      {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
+                                                                                      "res/img/angry_guy.png",
                                                                                       "idle"))
                     been_explored_dict[current_room_pos]=True
                     

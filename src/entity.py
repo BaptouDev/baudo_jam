@@ -48,7 +48,7 @@ class basic_enemy(animated_sprite_entity):
     def __init__(self, pos, scale, name, anims, sprite_path, default_anim, is_visible=True):
         super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
         self.damage_value = 1
-        self.max_health = 2
+        self.max_health = 3
         self.health = self.max_health
     def damage(self, hurt):
         self.health -= hurt
@@ -76,7 +76,7 @@ class litte_guy(basic_enemy):
         super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
         self.launch_projectile_time = 3
         self.launch_projectile_timer = 3
-        self.wait_init_timer = 1
+        self.wait_init_timer = .75
         self.speed = 100
     def update(self, camera_pos,player:player.player,dt:float,projectiles:list,collide_list):
         self.launch_projectile_timer-=dt
@@ -88,7 +88,35 @@ class litte_guy(basic_enemy):
             self.launch_projectile_timer = self.launch_projectile_time
             target_pos = player.pos - self.pos + utils.vector2(8,8)*self.scale
             launch_angle = math.atan2(target_pos.y,target_pos.x)#*180/math.pi
-            projectiles.append(utils.projectile(300,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle,"res/img/little_rock.png"))
+            projectiles.append(utils.projectile(350,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle,"res/img/little_rock.png"))
+        super().update(camera_pos,player,dt,projectiles)
+    def draw(self, screen, camera_pos, dt):
+        return super().draw(screen, camera_pos, dt)
+    def draw_display(self, screen, pos):
+        return super().draw_display(screen, pos)
+    
+class angry_guy(basic_enemy):
+    def __init__(self, pos, scale, name, anims, sprite_path, default_anim, is_visible=True):
+        super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
+        self.launch_projectile_time = 2
+        self.launch_projectile_timer = 2
+        self.wait_init_timer = .75
+        self.speed = 150
+        self.max_health = 6
+        self.health = self.max_health
+    def update(self, camera_pos,player:player.player,dt:float,projectiles:list,collide_list):
+        self.launch_projectile_timer-=dt
+        self.wait_init_timer-=dt
+        if self.wait_init_timer <=0:
+            target_pos = player.pos - self.pos
+            self.pos+= target_pos.normalize()*self.speed*dt
+        if self.launch_projectile_timer <=0:
+            self.launch_projectile_timer = self.launch_projectile_time
+            target_pos = player.pos - self.pos + utils.vector2(8,8)*self.scale
+            launch_angle = math.atan2(target_pos.y,target_pos.x)#*180/math.pi
+            projectiles.append(utils.projectile(350,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle,"res/img/little_rock.png"))
+            projectiles.append(utils.projectile(350,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle+math.pi/12,"res/img/little_rock.png"))
+            projectiles.append(utils.projectile(350,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle-math.pi/12,"res/img/little_rock.png"))
         super().update(camera_pos,player,dt,projectiles)
     def draw(self, screen, camera_pos, dt):
         return super().draw(screen, camera_pos, dt)
