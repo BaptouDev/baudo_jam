@@ -49,6 +49,7 @@ class player:
         self.invis_time = 1
         self.invis_timer = 0
         self.is_dashing = False
+        self.is_dead = False
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
