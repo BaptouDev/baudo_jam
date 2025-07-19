@@ -26,7 +26,7 @@ values = [utils.weighted_value(0,1),
           utils.weighted_value(6,1),
           utils.weighted_value(7,1),
           utils.weighted_value(8,1)]
-room_names = ["test","shop","start","room1","room2"]
+room_names = ["test","shop","start","room1","room2","room3","room4","room5","room6","room7"]
 rooms = []
 entities = [entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_guy.png"),
             entity.static_sprite_entity(utils.vector2(0,0),scale,"","res/img/little_rock.png")]
@@ -97,6 +97,8 @@ x=0
 current_room_pos = (0,0)
 edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
 doors = []
+been_explored_dict = {}
+
 #entities_creation_lookup_table = 
 for i in range(len(layout)):
     for j in range(len(layout[0])):
@@ -136,6 +138,7 @@ for i in range(len(layout)):
                         doors.append(gen.door("res/img/door.png",0,16,scale,(i,j),x))
                     else:
                         doors.append(gen.door("res/img/door.png",0,16,scale,(i,j),x,False))
+            been_explored_dict[(j,i)] = False
             #rooms_in_layout[x].pos = utils.vector2(64,64) + utils.vector2(j*scale*16*rooms_in_layout[x].h,i*scale*16*rooms_in_layout[x].w)
             if layout[i][j] ==2:
                 camera_pos= rooms_in_layout[x].pos.copy()-utils.vector2(64,64)
@@ -145,19 +148,21 @@ for i in range(len(layout)):
                 rooms_in_index = x
                 current_room_pos = (j,i)
                 r = random.randint(0,len(powerups)-1)
-                powerups[r].pos = utils.vector2(j*scale*16*18+16*scale*5,i*scale*16*10+16*4*scale)
+                powerups[r].pos = utils.vector2(j*scale*16*18+16*scale*6,i*scale*16*10+16*5*scale)
                 powerups[r].interact_rect.left = powerups[r].pos.x
                 powerups[r].interact_rect.top = powerups[r].pos.y
                 current_pickups.append(powerups[r])
                 a = random.randint(0,len(powerups)-1)
                 while a==r:
                     a = random.randint(0,len(powerups)-1)
-                powerups[a].pos = utils.vector2(j*scale*16*18+16*scale*10,i*scale*16*10+16*4*scale)
+                powerups[a].pos = utils.vector2(j*scale*16*18+16*scale*12,i*scale*16*10+16*5*scale)
                 powerups[a].interact_rect.left = powerups[a].pos.x
                 powerups[a].interact_rect.top = powerups[a].pos.y
+                been_explored_dict[current_room_pos] = True
                 current_pickups.append(powerups[a])
             if layout[i][j] ==1:
                 rooms_in_layout[x].been_explored = True
+                been_explored_dict[(j,i)] = True
             x+=1
 
 collision_layers = []
@@ -350,9 +355,9 @@ while running:
             cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
         else:
             player.update(delta_time,camera_pos,collision_layers)
-            kayou.update(player.pos,delta_time,collision_layers,camera_pos)
+            kayou.update(player.pos,delta_time,collision_layers,camera_pos,player.powerups_has["explosive_rock"])
             for e in current_entities:
-                e.update(camera_pos,player,delta_time,projectiles)
+                e.update(camera_pos,player,delta_time,projectiles,collision_layers)
                 if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
                     if player.powerups_has["big_rock"]:
                         e.damage(2)
@@ -428,16 +433,18 @@ while running:
                     c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
                     #print(c)
                     #if rooms_in_layout[room_in_index].been_explored == False:
-                    for j in range(len(c)):
-                        for k in range(len(c[0])):
-                            if c[j][k] =="0":
+                    if been_explored_dict[current_room_pos]==False:
+                        for j in range(len(c)):
+                            for k in range(len(c[0])):
+                                if c[j][k] =="0":
                                 #current_entities.append(entity.static_sprite_entity(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),scale,"","res/img/little_guy.png"))
-                                current_entities.append(entity.litte_guy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
+                                    current_entities.append(entity.litte_guy(utils.vector2(current_room_pos[0]*16*scale*18+k*16*scale+16*scale,current_room_pos[1]*16*scale*10+j*16*scale+16*scale),
                                                                                       scale,
                                                                                       "",
                                                                                       {"idle": utils.animation([0,1],[.3,.3]),"run": utils.animation([2,3],[.2,.2])},
                                                                                       "res/img/basic_enemy.png",
                                                                                       "idle"))
+                    been_explored_dict[current_room_pos]=True
                     
                 if (i.pos_in_layout[1],i.pos_in_layout[0]) == current_room_pos and len(current_entities)!=0:
                     #rooms_in_layout[i.room_index].been_explored = True

@@ -48,6 +48,7 @@ class player:
         self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False,"explosive_rock":False}
         self.invis_time = 1
         self.invis_timer = 0
+        self.is_dashing = False
     def update(self,dt,camera_pos,collision_layers:list):
         self.dash_time -= dt
         self.dashing_timer-=dt
@@ -76,11 +77,14 @@ class player:
             self.created_sprite_countdown-=1
             self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
         if self.dashing_timer >=0:
+            self.is_dashing = True
             self.vel = self.vel.normalize() * self.dash_speed
             if self.sprite_creation_timer <=0 and self.created_sprite_countdown >=0:
                 self.created_sprite_countdown -= 1
                 self.fadeout_sprites.append(utils.fadeout_sprite(self.pos,self.scale,150,200,self.sprite.images[0]))
                 self.sprite_creation_timer = self.dash_duration/self.nb_fadeout_sprites+self.created_sprite_offset
+        else:
+            self.is_dashing = False
 
         # --- Particules d'herbe ---
         if self.vel.magnitude_sq() > 0:
@@ -128,7 +132,7 @@ class player:
             self.dash_speed = 2000
             self.dash_duration = .15
     def damage(self,damage):
-        if self.invis_timer <0:
+        if self.invis_timer <0 and self.is_dashing == False:
             self.current_health-=damage
             if self.current_health<0:
                 self.current_health=0

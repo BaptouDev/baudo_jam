@@ -78,7 +78,7 @@ class litte_guy(basic_enemy):
         self.launch_projectile_timer = 3
         self.wait_init_timer = 1
         self.speed = 100
-    def update(self, camera_pos,player:player.player,dt:float,projectiles:list):
+    def update(self, camera_pos,player:player.player,dt:float,projectiles:list,collide_list):
         self.launch_projectile_timer-=dt
         self.wait_init_timer-=dt
         if self.wait_init_timer <=0:
@@ -91,6 +91,30 @@ class litte_guy(basic_enemy):
             projectiles.append(utils.projectile(300,self.pos,self.scale,1,utils.vector2(0,0),utils.vector2(16*self.scale,16*self.scale),launch_angle,"res/img/little_rock.png"))
         super().update(camera_pos,player,dt,projectiles)
     def draw(self, screen, camera_pos, dt):
+        return super().draw(screen, camera_pos, dt)
+    def draw_display(self, screen, pos):
+        return super().draw_display(screen, pos)
+
+class rocket_enemy(basic_enemy):
+    def __init__(self, pos, scale, name, anims, sprite_path, default_anim, is_visible=True):
+        super().__init__(pos, scale, name, anims, sprite_path, default_anim, is_visible)
+        self.wait_init_timer = 1
+        self.wait_between_rocket = 1
+        self.wait_between_rocket_timer = 2
+        self.launch_time = 2
+        self.launch_timer = 5
+        self.speed = 100
+        self.angle = 0
+    
+    def draw(self, screen, camera_pos, dt,player:player.player,projectiles:list,collide_list):
+        self.wait_init_timer-=dt
+        self.wait_between_rocket_timer-=dt
+        self.launch_timer -=dt
+        if self.wait_between_rocket_timer<=0 and self.launch_timer>=0:
+            target_pos = player.pos - self.pos + utils.vector2(8,8)*self.scale
+            launch_angle = math.atan2(target_pos.y,target_pos.x)
+            
+        self.vel = utils.vector2(math.cos(self.launch_angle),math.sin(self.launch_angle))*self.speed
         return super().draw(screen, camera_pos, dt)
     def draw_display(self, screen, pos):
         return super().draw_display(screen, pos)

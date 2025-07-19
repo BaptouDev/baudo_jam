@@ -305,7 +305,7 @@ class rotated_sprite:
                 p.pos = p.pos + p.vel * dt
                 p.vel = p.vel * 0.85 # friction
         self.particles = [p for p in self.particles if p.current_alpha > 0]
-    def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2):
+    def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2,is_explosive:bool):
         r_x = math.cos(math.radians(-self.rot))
         r_y = math.sin(math.radians(-self.rot))
         self.hitbox.left = self.pos.x + r_x*self.dist + 4*self.scale-camera_pos.x
