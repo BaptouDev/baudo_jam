@@ -92,14 +92,24 @@ current_selected_entity_index = 0
 #for i in range(50):
 #    layout = gen.generate_chamber(rooms,15,10,scale)
 
-layout = gen.generate_chamber(rooms,20,10,scale)
+layout = gen.generate_chamber(rooms,20,15,scale)
 rooms_in_layout = []
 room_in_index = 0
 x=0
 current_room_pos = (0,0)
+start_room_pos = (0,0)
+shop_room_pos = (0,0)
 edit_mode_adding_entities = False #false is for tile placing, true is for entity placing
 doors = []
 been_explored_dict = {}
+boss_anims = {"idle":utils.animation([0,1,2,1],[.2,.2,.2,.2]),
+                "cast_meteorite":utils.animation([0,1,2,3,4,5,6],[.08,.08,.08,.3,.08,.08,1],True),
+                "cast_projectiles":utils.animation([7,8,9,10,11,12,13,14,15,16],[.08,.08,.08,.08,.3,.08,.08,.08,.08,1],True)}
+
+boss = entity.boss((0,0),scale,boss_anims,"res/img/boss.png")
+
+shop_powerups = []
+powerup_indexes = []
 
 #entities_creation_lookup_table = 
 for i in range(len(layout)):
@@ -150,22 +160,42 @@ for i in range(len(layout)):
                 rooms_in_index = x
                 current_room_pos = (j,i)
                 r = random.randint(0,len(powerups)-1)
-                powerups[r].pos = utils.vector2(j*scale*16*18+16*scale*6,i*scale*16*10+16*5*scale)
+                powerup_indexes.append(r)
+                powerups[r].pos = utils.vector2(j*scale*16*18+16*scale*7,i*scale*16*10+16*5*scale)
                 powerups[r].interact_rect.left = powerups[r].pos.x
                 powerups[r].interact_rect.top = powerups[r].pos.y
                 current_pickups.append(powerups[r])
                 a = random.randint(0,len(powerups)-1)
                 while a==r:
                     a = random.randint(0,len(powerups)-1)
+                powerup_indexes.append(a)
                 powerups[a].pos = utils.vector2(j*scale*16*18+16*scale*12,i*scale*16*10+16*5*scale)
                 powerups[a].interact_rect.left = powerups[a].pos.x
                 powerups[a].interact_rect.top = powerups[a].pos.y
-                been_explored_dict[current_room_pos] = True
                 current_pickups.append(powerups[a])
+                been_explored_dict[current_room_pos] = True
+
+                boss.pos = utils.vector2(j*16*scale*18+8*16*scale,i*16*scale*10+4*16*scale)
+                start_room_pos = current_room_pos
             if layout[i][j] ==1:
                 rooms_in_layout[x].been_explored = True
-                been_explored_dict[(j,i)] = True
+                
+                shop_room_pos = (j,i)
             x+=1
+r = random.randint(0,len(powerups)-1)
+while r== powerup_indexes[0] or r==powerup_indexes[1]:
+    r = random.randint(0,len(powerups)-1)
+powerups[r].pos = utils.vector2(shop_room_pos[0]*scale*16*18+16*scale*7,shop_room_pos[1]*scale*16*10+16*5*scale)
+powerups[r].interact_rect.left = powerups[r].pos.x
+powerups[r].interact_rect.top = powerups[r].pos.y
+shop_powerups.append(powerups[r])
+a = random.randint(0,len(powerups)-1)
+while a==r or a== powerup_indexes[0] or a==powerup_indexes[1]:
+    a = random.randint(0,len(powerups)-1)
+powerups[a].pos = utils.vector2(shop_room_pos[0]*scale*16*18+16*scale*12,shop_room_pos[1]*scale*16*10+16*5*scale)
+powerups[a].interact_rect.left = powerups[a].pos.x
+powerups[a].interact_rect.top = powerups[a].pos.y
+shop_powerups.append(powerups[a])
 
 collision_layers = []
 for i in rooms_in_layout:
@@ -176,6 +206,7 @@ kayou_cooldown_max = kayou.max_throw_time
 
 current_entities = []
 projectiles = []
+
 MENU = 0
 GAME = 1
 CREDIT = 2
@@ -206,6 +237,7 @@ while running:
             kayou_cooldown = 0
     else:
         kayou_cooldown = kayou_cooldown_max
+    
         #if kayou_cooldown == 0:
         #    kayou_cooldown = kayou_cooldown_max
     
@@ -358,9 +390,15 @@ while running:
             cursor_pos = rooms[current_room_index].check_collision_mouse(camera_pos,edit_mode)
         else:
             player.update(delta_time,camera_pos,collision_layers)
+            if current_room_pos == start_room_pos:
+                boss.is_activated = True
+            for i in been_explored_dict:
+                if been_explored_dict[i] == False:
+                    boss.is_activated = False
             if player.is_dead:
                 state = GAME_OVER
             kayou.update(player.pos,delta_time,collision_layers,camera_pos,player.powerups_has["explosive_rock"])
+            boss.update(camera_pos,player,delta_time,projectiles,collision_layers)
             for e in current_entities:
                 e.update(camera_pos,player,delta_time,projectiles,collision_layers)
                 if kayou.hitbox.colliderect(e.hitbox) and kayou.is_thrown:
@@ -434,6 +472,8 @@ while running:
                     room_transition_timer = 0
                     player_start_pos = player.pos.copy()
                     camera_start_pos = camera_pos.copy()
+                    if current_room_pos == shop_room_pos:
+                        current_pickups = shop_powerups
                     #c = entity_maps[layout[current_room_pos[0]][current_room_pos[1]]].map
                     c = entity_maps[layout[current_room_pos[1]][current_room_pos[0]]].map
                     #print(c)
@@ -509,15 +549,23 @@ while running:
             for i in doors:
                 i.draw(screen,camera_pos)
         else:
+            #print(current_pickups)
+            if current_room_pos == start_room_pos:
+                font.render_to(screen,(16*scale*4,32*scale),"Revenez ici quand vous les aurez tous tué", "red")
 
-            for i in current_pickups:
-                i.draw(screen,camera_pos)
+            for i in range(len(current_pickups)):
+                current_pickups[i].draw(screen,camera_pos)
+                font.render_to(screen,(current_pickups[i].pos.x - camera_pos.x + (i-1)*16*scale*2,current_pickups[i].pos.y - camera_pos.y - 16*scale*2),current_pickups[i].description, "white")
+          
+            
             player.draw(screen,camera_pos,delta_time)
             kayou.draw(screen,camera_pos)
             for i in current_entities:
                 i.draw(screen,camera_pos,delta_time)
+            boss.draw(screen,delta_time,camera_pos)
             for i in projectiles:
                 i.draw(screen,camera_pos)
+
             #.draw(screen,camera_pos)
             for i in doors:
                 i.draw(screen,camera_pos)
@@ -529,6 +577,7 @@ while running:
                     screen.blit(heart_images[0],(21*scale + 12*i*scale,0))
                 else:
                     screen.blit(heart_images[2],(21*scale + 12*i*scale,0))
+            
 
             # --- UI de recharge du kayou ---
             bar_x = 200*scale
@@ -561,8 +610,16 @@ while running:
                             for r in rooms_in_layout:
                                 if hasattr(r, 'been_explored') and r.been_explored and r.pos == utils.vector2(64,64) + utils.vector2(j*scale*16*18,i*scale*16*10):
                                     color = (180,180,180)
+                            if been_explored_dict[(j,i)]:
+                                color = (80,255,80)
                             if (j,i) == current_room_pos:
                                 color = (80,180,255)
+                            if (j,i)==start_room_pos:
+                                color = (255,80,180)
+                                for key in been_explored_dict:
+                                    if not been_explored_dict[key]:
+                                        color = (80,255,80)
+                            
                             pygame.draw.rect(screen, color, (minimap_x + j*cell_w + 2, minimap_y + i*cell_h + 2, cell_w-4, cell_h-4), border_radius=3)
 
         if show_fps:

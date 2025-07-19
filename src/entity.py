@@ -126,3 +126,16 @@ def check_all_dead(entities:list):
     #    if i.is_dead == False:
     #        return False
     return False
+
+class boss:
+    def __init__(self, pos, scale, anims, sprite_path):
+        self.pos = pos 
+        self.scale = scale
+        self.sprite = utils.animated_sprite(anims,sprite_path,pos,scale,64,"idle")
+        self.is_activated = False
+    def update(self, camera_pos,player:player.player,dt:float,projectiles:list,collide_list):
+        if self.is_activated:
+            self.sprite.update_pos(self.pos)
+    def draw(self,screen:pygame.Surface,dt:float,camera_pos:utils.vector2):
+        if self.is_activated:
+            self.sprite.draw(screen,dt,camera_pos)

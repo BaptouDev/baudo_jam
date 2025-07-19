@@ -223,6 +223,7 @@ class animated_sprite:
             self.current_anim = 'null'
         else:
             self.current_anim = default_anim
+            self.default_anim = default_anim
         self.current_frame = 0
         self.current_time = 0
         self.is_flipped = False
@@ -258,7 +259,7 @@ class animated_sprite:
                 else:
                     self.current_frame = 0
                     if self.anims[self.current_anim].one_shot:
-                        self.is_visible = False
+                        self.current_anim = self.default_anim
         if self.is_visible:         
             surf = pygame.Surface((self.tile_size*self.scale,self.tile_size*self.scale),pygame.SRCALPHA)
             if self.null_alpha:
