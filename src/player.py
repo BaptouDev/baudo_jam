@@ -45,7 +45,7 @@ class player:
         self.grass_particle_image = pygame.transform.scale(self.grass_particle_image, (int(8*self.scale), int(8*self.scale)))
         self.max_health = 6
         self.current_health = 6
-        self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False,"explosive_rock":False}
+        self.powerups_has = {"health":False,"double_dash":False,"fast_rock":False,"big_rock":False}
         self.invis_time = 1.5
         self.invis_timer = 0
         self.is_dashing = False
@@ -130,8 +130,9 @@ class player:
             self.max_health += 2
             self.current_health += 2
         if powerup_name == "double_dash":
+            self.nb_fadeout_sprites = 8
             self.dash_speed = 2000
-            self.dash_duration = .15
+            self.dash_duration = .2
     def damage(self,damage):
         if self.invis_timer <0 and self.is_dashing == False:
             self.current_health-=damage

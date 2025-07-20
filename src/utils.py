@@ -259,7 +259,7 @@ class animated_sprite:
                 else:
                     self.current_frame = 0
                     if self.anims[self.current_anim].one_shot:
-                        self.current_anim = self.default_anim
+                        self.change_anim(self.default_anim)
         if self.is_visible:         
             surf = pygame.Surface((self.tile_size*self.scale,self.tile_size*self.scale),pygame.SRCALPHA)
             if self.null_alpha:
@@ -306,7 +306,7 @@ class rotated_sprite:
                 p.pos = p.pos + p.vel * dt
                 p.vel = p.vel * 0.85 # friction
         self.particles = [p for p in self.particles if p.current_alpha > 0]
-    def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2,is_explosive:bool):
+    def update(self,new_pos:vector2,dt:float,collision_layers:list,camera_pos:vector2):
         r_x = math.cos(math.radians(-self.rot))
         r_y = math.sin(math.radians(-self.rot))
         self.hitbox.left = self.pos.x + r_x*self.dist + 4*self.scale-camera_pos.x
@@ -388,3 +388,7 @@ class projectile:
         self.hitrect = pygame.Rect(self.pos.x+self.offset.x-camera_pos.x,self.pos.y+self.offset.y-camera_pos.y,self.size.x,self.size.y)
     def draw(self,screen:pygame.Surface,camera_pos:vector2):
         screen.blit(self.sprite,(self.pos-camera_pos).to_tuple())
+
+def summon_projectile_circle(speed:float,pos:float,scale:float,damage:int,offset:vector2,size:vector2,number:int,sprite_path:str,projectiles:list):
+    for i in range(number):
+        projectiles.append(projectile(speed,pos,scale,damage,offset,size,2*math.pi*i/number,sprite_path))

@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from . import utils
 from . import player
 
@@ -156,14 +157,130 @@ def check_all_dead(entities:list):
     return False
 
 class boss:
-    def __init__(self, pos, scale, anims, sprite_path):
+    def __init__(self, pos:utils.vector2, scale, anims, sprite_path):
         self.pos = pos 
         self.scale = scale
         self.sprite = utils.animated_sprite(anims,sprite_path,pos,scale,64,"idle")
         self.is_activated = False
+        self.flipped = False
+        self.is_dead = True
+        self.max_health = 120
+        self.current_health = self.max_health
+        self.offset = utils.vector2(0,0)
+        self.hurtbox = pygame.Rect(self.pos.x +self.offset.x,self.pos.y+self.offset.y,64*scale,64*scale)
+        self.pos_in_layout = (0,0)
+        
+        self.first_attack_time = 1
+        self.first_attack_timer = 1
+        self.state = 0 #0 is base idle state, 1 is for the projectile attack, 2 is for teleportation, 3 is for the meteors, 4 is for the dash
+        self.previous_state = 0
+        self.wait_time_between_states = .5
+        self.state_timer = .5
+        #projectile variables
+        self.first_projectile_attack_time = 1
+        self.projectile_attack_wave_interval = .5
+        self.projectile_attack_time = .5
+        self.projectile_attack_nb = 6
+        self.projectile_attack_count = 6
+        #teleport variables
+        self.summon_portal_wait_time = 1
+        self.summon_portal_wait_timer = 1
+        self.teleport_interval = .5
+        self.teleport_timer = .5
+        self.portals_nb = 3
+        self.teleport_count = 3
+        self.has_first_attacked = False
+        self.teleport_pos = []
+        self.portals = []
+        self.has_summoned_portals =  True
+        self.portal_projectile_nb = 6
     def update(self, camera_pos,player:player.player,dt:float,projectiles:list,collide_list):
         if self.is_activated:
+            self.first_attack_timer-=dt
+            self.hurtbox.left = self.pos.x + self.offset.x - camera_pos.x
+            self.hurtbox.top = self.pos.y + self.offset.y - camera_pos.y
+            if self.state ==0:
+                self.state_timer -= dt
+                if self.pos.x - player.pos.x <0:
+                    self.flipped = False
+                else:
+                    self.flipped = True
+                if self.first_attack_timer <=0 and not self.has_first_attacked:
+                    self.state = 1
+                    self.previous_state = 0
+                    self.sprite.change_anim("cast_projectiles")
+                    self.has_first_attacked =  True
+                    self.projectile_attack_time = self.first_projectile_attack_time
+                    self.projectile_attack_count = self.projectile_attack_nb
+                if self.first_attack_timer<=0 and self.state_timer<=0 and self.has_first_attacked and self.state==0:
+                    """self.state = random.randint(1,4)
+                    while self.state == self.previous_state:
+                        self.state = random.randint(1,4)"""
+                    self.state = 2
+                    if self.state == 1:
+                        self.sprite.change_anim("cast_projectiles")
+                        self.projectile_attack_time = self.first_projectile_attack_time
+                        self.projectile_attack_count = self.projectile_attack_nb
+                    elif self.state==2:
+                        self.sprite.change_anim("cast_meteorite")
+                        self.teleport_count = self.portals_nb
+                        self.summon_portal_wait_timer = self.summon_portal_wait_time
+                        self.teleport_pos.clear()
+                        self.has_summoned_portals = False
+
+            elif self.state == 1:
+                self.projectile_attack_time -= dt
+                if self.projectile_attack_count >0:
+                    if self.projectile_attack_time <=0:
+                        self.projectile_attack_count -=1
+                        self.projectile_attack_time = self.projectile_attack_wave_interval
+                        if not self.flipped:
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(50*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),0,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(50*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi/8,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(50*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),-math.pi/8,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(50*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi/4,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(50*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),-math.pi/4,"res/img/powerball.png"))
+                        else:
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi*9/8,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi*7/8,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi*5/4,"res/img/powerball.png"))
+                            projectiles.append(utils.projectile(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),math.pi*3/4,"res/img/powerball.png"))
+                else:
+                    self.state =0   
+                    self.previous_state = 1
+                    self.state_timer = self.wait_time_between_states
+            elif self.state == 2:
+                self.summon_portal_wait_time-=dt
+                if self.summon_portal_wait_time<=0 and not self.has_summoned_portals:
+                    for i in range(self.portals_nb):
+                        self.teleport_pos.append(utils.vector2(self.pos_in_layout[0]*16*self.scale*18 + random.randint(2,16)*self.scale*16,self.pos_in_layout[1]*16*self.scale*10 + random.randint(2,8)*self.scale*16))
+                    for i in self.teleport_pos:
+                        self.portals.append((pygame.transform.scale_by(pygame.image.load("res/img/portal.png").convert_alpha(),self.scale),i))
+                    self.has_summoned_portals = True
+                if self.has_summoned_portals and self.teleport_count >0:
+                    self.teleport_timer-=dt
+                    if self.teleport_timer <=0:
+                        self.pos = self.teleport_pos[self.teleport_count-1] - utils.vector2(32,32)*self.scale
+                        utils.summon_projectile_circle(350,self.pos + utils.vector2(-10*self.scale,32*self.scale),self.scale,1,utils.vector2(2*self.scale,2*self.scale),utils.vector2(14*self.scale,14*self.scale),self.portal_projectile_nb,"res/img/powerball.png",projectiles)
+                        self.teleport_count-=1
+                        self.teleport_timer = self.teleport_interval
+                        self.portals.pop(self.teleport_count-1)
+                if self.teleport_count ==0:
+                    self.state =0   
+                    self.previous_state = 2
+                    self.state_timer = self.wait_time_between_states
+            elif self.state == 3:
+                pass
+            elif self.state == 4:
+                pass
+            self.sprite.is_flipped = self.flipped
+            
             self.sprite.update_pos(self.pos)
+    def damage(self,hurt_amount):
+        self.current_health-= hurt_amount
     def draw(self,screen:pygame.Surface,dt:float,camera_pos:utils.vector2):
         if self.is_activated:
             self.sprite.draw(screen,dt,camera_pos)
+            for i in self.portals:
+                screen.blit(i[0],(i[1]-camera_pos).to_tuple())

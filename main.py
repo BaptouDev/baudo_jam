@@ -62,8 +62,7 @@ powerup_images = utils.sheet_to_list(pygame.image.load("res/img/powerup.png"),16
 powerups = [utils.powerup_pickup("health","2 Coeurs en plus",powerup_images[0],scale),
             utils.powerup_pickup("double_dash","Un dash plus rapide",powerup_images[1],scale),
             utils.powerup_pickup("fast_rock","Kayou plus rapide et va plus loin",powerup_images[3],scale),
-            utils.powerup_pickup("big_rock","Gros Kayou",powerup_images[4],scale),
-            utils.powerup_pickup("exploding_rock","Kayou explosif",powerup_images[6],scale)]
+            utils.powerup_pickup("big_rock","Gros Kayou",powerup_images[4],scale)]
 current_pickups = []
 
 previous_time = 0
@@ -104,10 +103,10 @@ edit_mode_adding_entities = False #false is for tile placing, true is for entity
 doors = []
 been_explored_dict = {}
 boss_anims = {"idle":utils.animation([0,1,2,1],[.2,.2,.2,.2]),
-                "cast_meteorite":utils.animation([0,1,2,3,4,5,6],[.08,.08,.08,.3,.08,.08,1],True),
-                "cast_projectiles":utils.animation([7,8,9,10,11,12,13,14,15,16],[.08,.08,.08,.08,.3,.08,.08,.08,.08,1],True)}
+                "cast_meteorite":utils.animation([3,4,5,6,7,8,9],[.08,.08,.08,.3,.08,.08,1],True),
+                "cast_projectiles":utils.animation([10,11,12,13,14,15,16,17,18,19],[.08,.08,.08,.08,.3,.08,.08,.08,.08,5],True)}
 
-boss = entity.boss((0,0),scale,boss_anims,"res/img/boss.png")
+boss = entity.boss(utils.vector2(0,0),scale,boss_anims,"res/img/boss.png")
 
 shop_powerups = []
 powerup_indexes = []
@@ -178,6 +177,7 @@ for i in range(len(layout)):
 
                 boss.pos = utils.vector2(j*16*scale*18+8*16*scale,i*16*scale*10+4*16*scale)
                 start_room_pos = current_room_pos
+                boss.pos_in_layout = start_room_pos
             if layout[i][j] ==1:
                 rooms_in_layout[x].been_explored = True
                 
@@ -280,7 +280,8 @@ while running:
                     else:
                         current_room_index=0
                 if event.key==pygame.K_k:
-                    current_entities.clear()
+                    for key in been_explored_dict:
+                        been_explored_dict[key] = True
                     #for i in range(len(current_entities)):
                     #    current_entities[i].is_dead = True
                 if event.key == pygame.K_c and edit_mode:
@@ -322,7 +323,7 @@ while running:
                 mouse_pos = utils.vector2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]) + camera_pos
                 direction = mouse_pos - kayou.pos
                 if player.powerups_has["fast_rock"]:
-                    kayou.throw(direction, 1200)
+                    kayou.throw(direction, 1600)
                     kayou.max_throw_time = 1
                     kayou_cooldown_max = kayou.max_throw_time
 
@@ -401,7 +402,7 @@ while running:
                     boss.is_activated = False
             if player.is_dead:
                 state = GAME_OVER
-            kayou.update(player.pos,delta_time,collision_layers,camera_pos,player.powerups_has["explosive_rock"])
+            kayou.update(player.pos,delta_time,collision_layers,camera_pos)
             boss.update(camera_pos,player,delta_time,projectiles,collision_layers)
             for e in current_entities:
                 e.update(camera_pos,player,delta_time,projectiles,collision_layers)
@@ -410,6 +411,13 @@ while running:
                         e.damage(2)
                     else:
                         e.damage(1)
+                    kayou.throw_timer = 500
+            if boss.is_activated and kayou.hitbox.colliderect(boss.hurtbox) and kayou.is_thrown:
+                if player.powerups_has["big_rock"]:
+                    boss.damage(2)
+                    kayou.throw_timer = 500
+                else:
+                    boss.damage(1)
                     kayou.throw_timer = 500
             pop_it = -1
             for p in range(len(projectiles)):
@@ -565,7 +573,7 @@ while running:
                 i.draw(screen,camera_pos)
         else:
             #print(current_pickups)
-            if current_room_pos == start_room_pos:
+            if current_room_pos == start_room_pos and not boss.is_activated:
                 font.render_to(screen,(16*scale*4,32*scale),"Revenez ici quand vous les aurez tous tué", "red")
 
             for i in range(len(current_pickups)):
@@ -606,6 +614,14 @@ while running:
             #pygame.draw.rect(screen, (255,255,255), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=8)
             screen.blit(little_rock_img, (bar_x-scale*20, bar_y-scale*5))
 
+            #UI de santé du boss:
+            if boss.is_activated:
+                boss_health_x = 64*scale
+                boss_health_y = 48*scale
+                boss_health_w = 192*scale
+                boss_health_h = 10*scale
+                ratio = boss.current_health/boss.max_health
+                pygame.draw.rect(screen,"red",(boss_health_x,boss_health_y,int((boss_health_w)*ratio),boss_health_h))
             if show_minimap:
                 # --- Mini-map ---
                 minimap_w = 200
